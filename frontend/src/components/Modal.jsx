@@ -2,51 +2,52 @@ import PropTypes from "prop-types";
 import { useState } from "react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { loginUser, registerUser } from "../services/authServices";
-import { FaSpinner } from "react-icons/fa"; // Ícone de carregamento
+import { FaSpinner } from "react-icons/fa";
 
-const Modal = ({ type, onClose }) => {
+const Modal = ({ type, onClose, onLoginSuccess }) => {
   const isLogin = type === "login";
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [email, setEmail] = useState(""); // Adicionando o estado para o email
-  const [message, setMessage] = useState(""); // Para mostrar mensagens de erro ou sucesso
-  const [isLoading, setIsLoading] = useState(false); // Estado de carregamento
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Função para enviar o formulário (login ou cadastro)
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage(""); // Limpa mensagens anteriores
-    setIsLoading(true); // Inicia o carregamento
+  e.preventDefault();
+  setMessage("");
+  setIsLoading(true);
 
-    // Lógica de login
-    if (isLogin) {
-      const result = await loginUser(email, password);
-      if (result) {
-        setMessage("Login bem-sucedido!");
-        onClose(); // Fecha o modal após o login
-      } else {
-        setMessage("Erro no login. Verifique suas credenciais.");
-      }
+  if (isLogin) {
+    const result = await loginUser(email, password);
+    if (result) {
+      localStorage.setItem("userEmail", result.user.email);
+      localStorage.setItem("userRole", result.user.role); // Garantia extra
+      if (onLoginSuccess) onLoginSuccess(result.user.email, result.user.role); // ✅ Agora envia role
+      setMessage("Login bem-sucedido!");
+      onClose();
     } else {
-      // Lógica de cadastro
-      if (password !== confirmPassword) {
-        setMessage("As senhas não coincidem.");
-        setIsLoading(false); // Desativa o carregamento em caso de erro
-        return;
-      }
-
-      const result = await registerUser(email, password);
-      if (result) {
-        setMessage("Usuário cadastrado com sucesso!");
-        onClose(); // Fecha o modal após o cadastro
-      } else {
-        setMessage("Erro ao cadastrar usuário.");
-      }
+      setMessage("Erro no login. Verifique suas credenciais.");
+    }
+  } else {
+    if (password !== confirmPassword) {
+      setMessage("As senhas não coincidem.");
+      setIsLoading(false);
+      return;
     }
 
-    setIsLoading(false); // Desativa o carregamento após a operação
-  };
+    const result = await registerUser(email, password);
+    if (result) {
+      setMessage("Usuário cadastrado com sucesso!");
+      onClose();
+    } else {
+      setMessage("Erro ao cadastrar usuário.");
+    }
+  }
+
+  setIsLoading(false);
+};
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -63,7 +64,6 @@ const Modal = ({ type, onClose }) => {
           className="w-full mb-3 px-4 py-2 border rounded-md"
         />
 
-        {/* Se não for login, mostramos os campos de senha e confirmar senha */}
         <div className="relative mb-4">
           <input
             type={showPassword ? "text" : "password"}
@@ -98,10 +98,8 @@ const Modal = ({ type, onClose }) => {
           </div>
         )}
 
-        {/* Mostrar mensagem de erro ou sucesso */}
         {message && <p className="text-red-500 text-center mb-4">{message}</p>}
 
-        {/* Botões centralizados e distribuídos igualmente */}
         <div className="flex justify-between space-x-2">
           <button
             className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-600 flex-1"
@@ -112,7 +110,7 @@ const Modal = ({ type, onClose }) => {
           <button
             className="bg-yellow-400 text-white px-4 py-2 rounded hover:bg-yellow-600 flex-1"
             onClick={handleSubmit}
-            disabled={isLoading} // Desabilita o botão se estiver carregando
+            disabled={isLoading}
           >
             {isLoading ? (
               <FaSpinner className="animate-spin mx-auto" size={24} />
@@ -129,6 +127,7 @@ const Modal = ({ type, onClose }) => {
 Modal.propTypes = {
   type: PropTypes.oneOf(["login", "cadastro"]).isRequired,
   onClose: PropTypes.func.isRequired,
+  onLoginSuccess: PropTypes.func, // ✅ nova prop opcional
 };
 
 export default Modal;

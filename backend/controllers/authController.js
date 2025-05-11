@@ -33,10 +33,15 @@ const register = async (req, res) => {
     // Criptografa senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Verifica se é o primeiro usuário
+    const userCount = await User.count();
+    const role = userCount === 0 ? 'admin' : 'user'; // Primeiro usuário será admin, o resto será user
+
     // Cria usuário
     const newUser = await User.create({
       email,
       password: hashedPassword,
+      role, // Atribui o role como admin ou user
     });
 
     return res.status(201).json({
@@ -44,6 +49,7 @@ const register = async (req, res) => {
       user: {
         id: newUser.id,
         email: newUser.email,
+        role: newUser.role, // Retorna o role do usuário
       },
     });
   } catch (error) {
@@ -79,6 +85,7 @@ const login = async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
+        role: user.role, // Retorna o role do usuário
       },
       token,
     });

@@ -18,7 +18,7 @@ const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
 
 // Função para fazer login de um usuário
 const loginUser = async (email, password) => {
-const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -27,16 +27,16 @@ const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
   const data = await response.json();
   if (response.ok) {
     console.log('Login bem-sucedido:', data);
-    // Armazenar o token no localStorage
+    // Armazenar o token, o email e o role no localStorage
     localStorage.setItem('token', data.token);
+    localStorage.setItem('userEmail', data.user.email); 
+    localStorage.setItem('userRole', data.user.role); // Armazenando o role
     return data;
   } else {
     console.error('Erro no login:', data.message);
     return null; // Aqui você pode retornar o erro para mostrar ao usuário
   }
 };
-
-
 // Função para obter o token armazenado
 const getToken = () => {
   return localStorage.getItem('token');

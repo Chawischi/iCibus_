@@ -4,9 +4,9 @@ const { v4: uuidv4 } = require('uuid');  // Importando o gerador de UUIDv4
 
 const User = sequelize.define('User', {
   id: {
-    type: DataTypes.UUID,  // Tipo UUID
-    defaultValue: uuidv4,  // Valor padrão será um UUIDv4 gerado
-    primaryKey: true,      // A chave primária
+    type: DataTypes.UUID,
+    defaultValue: uuidv4,
+    primaryKey: true,
   },
   email: {
     type: DataTypes.STRING,
@@ -20,9 +20,14 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  role: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'user', // Padrão para novos usuários
+  },
 }, {
-  tableName: 'users', // nome da tabela no banco
-  timestamps: true,   // cria createdAt e updatedAt
+  tableName: 'users',
+  timestamps: true,
 });
 
 module.exports = User;
