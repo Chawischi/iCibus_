@@ -11,6 +11,7 @@ const Header = ({ onLoginClick, onCadastroClick, isLoggedIn, userEmail, userRole
   const handleGoToAdminPage = () => {
     navigate("/admin"); 
   };
+
   return (
     <header className="w-full h-[120px] bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 shadow-md flex items-center">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center w-full">
@@ -52,13 +53,13 @@ const Header = ({ onLoginClick, onCadastroClick, isLoggedIn, userEmail, userRole
             <>
               <button
                 onClick={onLoginClick}
-                className="px-4 py-2 bg-transparent text-white font-semibold rounded-lg transition hover:text-red-600"
+                className="px-6 py-2 border-2 border-white text-white font-semibold rounded-lg transition hover:bg-white hover:text-yellow-500"
               >
                 Login
               </button>
               <button
                 onClick={onCadastroClick}
-                className="px-4 py-2 bg-transparent text-white font-semibold rounded-lg transition hover:text-red-600"
+                className="px-6 py-2 bg-red-500 text-white font-semibold rounded-lg transition hover:bg-white hover:text-red-500"
               >
                 Cadastro
               </button>

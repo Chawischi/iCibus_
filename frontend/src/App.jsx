@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';  // Remover a importação do BrowserRouter aqui
+import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Modal from './components/Modal';
 import Home from './pages/Home';
 import AdminPage from './pages/adminPage';
+import RestaurantDetail from './pages/restauranteDetail';
 
 function App() {
   const [modalType, setModalType] = useState(null);
