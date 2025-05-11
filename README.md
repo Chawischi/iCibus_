@@ -20,8 +20,8 @@ O Icibus foi desenvolvido utilizando as seguintes tecnologias:
 [![Tailwind](https://img.shields.io/badge/TailwindCSS-06B6D4.svg?style=for-the-badge&logo=TailwindCSS&logoColor=white)](https://tailwindcss.com/)  
 [![React](https://img.shields.io/badge/React-61DAFB.svg?style=for-the-badge&logo=React&logoColor=black)](https://reactjs.org/)  
 [![Next.js](https://img.shields.io/badge/Next.js-000000.svg?style=for-the-badge&logo=Next.js&logoColor=white)](https://nextjs.org/)  
-[![Clerk](https://img.shields.io/badge/Clerk-000000.svg?style=for-the-badge&logo=Clerk&logoColor=white)](https://clerk.dev/)  
-[![Hygraph](https://img.shields.io/badge/Hygraph-1E2A58.svg?style=for-the-badge&logo=Hygraph&logoColor=white)](https://hygraph.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791.svg?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+
 
 Optamos pelo React.js para construir interfaces dinâmicas e responsivas, garantindo uma experiência fluida para o usuário. O Next.js será utilizado tanto no frontend quanto no backend, permitindo renderização otimizada e a criação de APIs diretamente na aplicação. Para o banco de dados, escolhemos o PostgreSQL por sua robustez e escalabilidade. A autenticação será gerenciada pelo Clerk, que simplifica a implementação de login seguro e controle de acesso. Já o TailwindCSS facilitará a estilização, tornando o desenvolvimento mais ágil e organizado, sem a necessidade de escrever CSS manualmente.
 
