@@ -12,7 +12,7 @@ const {
   deleteItemMenu,
 } = require('../controllers/itemMenuController');
 
-const authenticateToken = require('../middleware/authenticate'); // Middleware JWT
+const authenticateToken = require('../middleware/authMiddleware.js'); // Middleware JWT
 
 // Configuração do multer para uploads
 const storage = multer.diskStorage({

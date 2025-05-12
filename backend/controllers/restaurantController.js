@@ -1,34 +1,54 @@
-const { Restaurante, Categoria } = require('../models');
+const sequelize = require('../config/db');
+const Restaurante = require('../models/Restaurante')(sequelize);
 const slugify = require('slugify');
 
 // Criar restaurante
 const createRestaurante = async (req, res) => {
-  const { nome, sobreNos, horario, categoriaId } = req.body;
-  const imagem = req.file ? req.file.filename : null;
-
   try {
-    const slug = slugify(nome, { lower: true });
+    const { nome, telefone, endereco, horario, sobreNos } = req.body;
 
+    let categorias = [];
+    if (req.body['categoriaIds[]']) {
+      // Se o 'categoriaIds[]' for um array de categorias
+      categorias = Array.isArray(req.body['categoriaIds[]']) 
+        ? req.body['categoriaIds[]']
+        : [req.body['categoriaIds[]']]; // Caso contrário, converte em array
+    }
+
+    // Validar e garantir que as categorias sejam válidas
+    categorias = categorias.filter(id => typeof id === 'string' && id.trim().length > 0);
+
+    // Salvar imagem, se houver
+    let imagemPath = '';
+    if (req.file) {
+      imagemPath = req.file.filename;
+    }
+
+    // Criar restaurante
     const restaurante = await Restaurante.create({
       nome,
-      slug,
-      sobreNos,
+      telefone,
+      endereco,
       horario,
-      imagem,
-      categoriaId
+      sobreNos,
+      imagem: imagemPath,
+      slug: slugify(nome, { lower: true, strict: true }),
+      categoriaId: categorias, // Passar o array de categorias aqui
     });
 
-    res.status(201).json(restaurante);
+    // Retornar o restaurante criado
+    res.status(201).json({ message: 'Restaurante criado com sucesso', restaurante: restaurante.toJSON() });
   } catch (err) {
     console.error('Erro ao criar restaurante:', err);
     res.status(500).json({ error: 'Erro ao criar restaurante' });
   }
 };
 
+
 // Buscar todos os restaurantes
 const getAllRestaurantes = async (req, res) => {
   try {
-    const restaurantes = await Restaurante.findAll({ include: Categoria });
+    const restaurantes = await Restaurante.findAll();
     res.json(restaurantes);
   } catch (err) {
     console.error('Erro ao buscar restaurantes:', err);
@@ -40,7 +60,7 @@ const getAllRestaurantes = async (req, res) => {
 const getRestauranteById = async (req, res) => {
   const { id } = req.params;
   try {
-    const restaurante = await Restaurante.findByPk(id, { include: Categoria });
+    const restaurante = await Restaurante.findByPk(id);
     if (!restaurante) return res.status(404).json({ error: 'Restaurante não encontrado' });
     res.json(restaurante);
   } catch (err) {
@@ -52,7 +72,7 @@ const getRestauranteById = async (req, res) => {
 // Atualizar restaurante
 const updateRestaurante = async (req, res) => {
   const { id } = req.params;
-  const { nome, sobreNos, horario, categoriaId } = req.body;
+  const { nome, sobreNos, horario, telefone, categoria } = req.body;
   const imagem = req.file ? req.file.filename : null;
 
   try {
@@ -65,10 +85,12 @@ const updateRestaurante = async (req, res) => {
     }
     if (sobreNos) restaurante.sobreNos = sobreNos;
     if (horario) restaurante.horario = horario;
-    if (categoriaId) restaurante.categoriaId = categoriaId;
+    if (telefone) restaurante.telefone = telefone;
     if (imagem) restaurante.imagem = imagem;
+    if (categoria && Array.isArray(categoria)) restaurante.categoria = categoria;
 
     await restaurante.save();
+
     res.json(restaurante);
   } catch (err) {
     console.error('Erro ao atualizar restaurante:', err);
@@ -96,5 +118,5 @@ module.exports = {
   getAllRestaurantes,
   getRestauranteById,
   updateRestaurante,
-  deleteRestaurante
+  deleteRestaurante,
 };

@@ -1,4 +1,5 @@
-const { Categoria } = require('../models');
+const sequelize = require('../config/db');
+const Categoria = require('../models/Categoria')(sequelize);
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const restauranteController = require('../controllers/restauranteController');
+const restauranteController = require('../controllers/restaurantController.js');
 const upload = require('../config/uploadConfig');
-const authenticate = require('../middleware/authenticate'); // Middleware JWT
+const authenticate = require('../middleware/authMiddleware.js'); // Middleware JWT
 
 // Criar restaurante (com imagem e autenticação)
 router.post('/', authenticate, upload.single('imagem'), restauranteController.createRestaurante);

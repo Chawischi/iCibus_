@@ -5,7 +5,7 @@ module.exports = (sequelize) => {
   const Restaurante = sequelize.define('Restaurante', {
     id: {
       type: DataTypes.UUID,
-      defaultValue: uuidv4,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true
     },
     nome: {
@@ -24,13 +24,17 @@ module.exports = (sequelize) => {
     },
     imagem: {
       type: DataTypes.STRING
+    },
+    telefone: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    categoria: {
+      type: DataTypes.ARRAY(DataTypes.UUID),
+      allowNull: false,
+      defaultValue: []
     }
   });
-
-  Restaurante.associate = (models) => {
-    Restaurante.belongsTo(models.Categoria, { foreignKey: 'categoriaId' });
-    Restaurante.hasMany(models.ItemMenu, { foreignKey: 'restauranteId' });
-  };
 
   return Restaurante;
 };

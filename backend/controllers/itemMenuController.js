@@ -1,5 +1,5 @@
 // controllers/itemMenuController.js
-const { ItemMenu } = require('../models');
+const { ItemMenu } = require('../models/ItemMenu');
 const slugify = require('slugify');
 const path = require('path');
 const fs = require('fs');

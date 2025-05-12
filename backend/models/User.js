@@ -23,7 +23,7 @@ const User = sequelize.define('User', {
   role: {
     type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'user', // Padrão para novos usuários
+    defaultValue: 'user',
   },
 }, {
   tableName: 'users',

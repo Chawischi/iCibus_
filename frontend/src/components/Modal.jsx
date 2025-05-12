@@ -22,8 +22,8 @@ const Modal = ({ type, onClose, onLoginSuccess }) => {
     const result = await loginUser(email, password);
     if (result) {
       localStorage.setItem("userEmail", result.user.email);
-      localStorage.setItem("userRole", result.user.role); // Garantia extra
-      if (onLoginSuccess) onLoginSuccess(result.user.email, result.user.role); // ✅ Agora envia role
+      localStorage.setItem("userRole", result.user.role); 
+      if (onLoginSuccess) onLoginSuccess(result.user.email, result.user.role);
       setMessage("Login bem-sucedido!");
       onClose();
     } else {
@@ -127,7 +127,7 @@ const Modal = ({ type, onClose, onLoginSuccess }) => {
 Modal.propTypes = {
   type: PropTypes.oneOf(["login", "cadastro"]).isRequired,
   onClose: PropTypes.func.isRequired,
-  onLoginSuccess: PropTypes.func, // ✅ nova prop opcional
+  onLoginSuccess: PropTypes.func,
 };
 
 export default Modal;
