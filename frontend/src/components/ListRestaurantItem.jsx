@@ -16,18 +16,14 @@ const ListRestaurantItem = ({ restaurantes, onSelectRestaurant }) => {
     <div className="flex justify-center">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {restaurantes.map((restaurant) => (
-          <div
-            key={restaurant.id}
-            onClick={() => handleRestaurantClick(restaurant)}
-            className={`cursor-pointer ${selectedRestaurant === restaurant.id ? 'border-2 border-yellow-500' : ''}`} // Adiciona borda amarela quando selecionado
-          >
-            <RestaurantItem
-              name={restaurant.nome}
-              category={restaurant.categoria}
-              image={`${import.meta.env.VITE_API_URL}/uploads/${restaurant.imagem}`}
-              rating={restaurant.avaliacao}
-            />
-          </div>
+          <RestaurantItem
+            key={restaurant.id} 
+            name={restaurant.nome}
+            category={restaurant.Categoria?.map(c => c.nome).join(", ") || ''}
+            image={restaurant.imagem}
+            isSelected={restaurant.id === selectedRestaurant}
+             onClick={() => handleRestaurantClick(restaurant)}
+          />
         ))}
       </div>
     </div>

@@ -2,15 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
-const sequelize = require('./config/db.js');
-
-// Carregar todos os modelos
-const User = require('./models/User.js');
-const Imagem = require('./models/Imagem.js');
-const Categoria = require('./models/Categoria.js');
-const Restaurante = require('./models/Restaurante.js');
-const ItemMenu = require('./models/ItemMenu.js');
-
+const db = require('./models');
 
 
 // Configurações do Express
@@ -31,7 +23,7 @@ app.use('/restaurantes', restauranteRoutes);
 app.use('/itemmenu', itemMenuRoutes);
 
 // Sincronizar banco
-sequelize.sync({ force: false })
+db.sequelize.sync({ force: false })
   .then(() => {
     console.log('Banco sincronizado');
   })

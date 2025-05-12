@@ -13,49 +13,61 @@ const FormRestaurant = ({ categorias }) => {
   const [dropdownAberto, setDropdownAberto] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // Garantir que categoriaSelecionada seja um array e o formate corretamente
-    const formData = new FormData();
-    formData.append('nome', nome);
-    formData.append('telefone', telefone);
-    formData.append('endereco', endereco);
-    formData.append('horario', horario);
-    formData.append('sobreNos', sobreNos);
+  // Garantir que categoriaSelecionada seja um array e o formate corretamente
+  const formData = new FormData();
+  formData.append('nome', nome);
+  formData.append('telefone', telefone);
+  formData.append('endereco', endereco);
+  formData.append('horario', horario);
+  formData.append('sobreNos', sobreNos);
+
+  // Verificando se imagem é um arquivo antes de enviar
+  if (imagem) {
     formData.append('imagem', imagem);
-    categoriaSelecionada.forEach((id) => {
-      if (typeof id === 'string' && id.length > 0) {
-        formData.append('categoriaIds[]', id);
-      } else {
-        console.error("ID inválido encontrado:", id);
-      }
+  }
 
-    });
-
-    console.log("Dados enviados para criar restaurante:", {
-      nome,
-      telefone,
-      endereco,
-      horario,
-      sobreNos,
-      imagem,
-      categoriaSelecionada
-    });
-
-    try {
-      await createRestaurante(formData);
-      setNome('');
-      setTelefone('');
-      setEndereco('');
-      setHorario('');
-      setSobreNos('');
-      setImagem(null);
-      setCategoriaSelecionada([]);
-      setDropdownAberto(false);
-    } catch (err) {
-      console.error('Erro ao criar restaurante:', err);
+  // Adicionando categorias selecionadas no formato adequado
+  categoriaSelecionada.forEach((id) => {
+    if (typeof id === 'string' && id.length > 0) {
+      formData.append('categoriaIds[]', id);  // Enviando categorias como array
+    } else {
+      console.error("ID inválido encontrado:", id);
     }
-  };
+  });
+
+  // Log para verificar os dados enviados
+  console.log("Dados enviados para criar restaurante:", {
+    nome,
+    telefone,
+    endereco,
+    horario,
+    sobreNos,
+    imagem,
+    categoriaSelecionada
+  });
+
+  try {
+    // Enviando o FormData para o serviço
+    const response = await createRestaurante(formData);
+
+    // Resetando os campos do formulário após o envio com sucesso
+    setNome('');
+    setTelefone('');
+    setEndereco('');
+    setHorario('');
+    setSobreNos('');
+    setImagem(null);
+    setCategoriaSelecionada([]);
+    setDropdownAberto(false);
+    
+    console.log("Restaurante criado com sucesso:", response);
+  } catch (err) {
+    console.error('Erro ao criar restaurante:', err);
+  }
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-6xl mx-auto bg-gray-100 p-6 rounded-2xl shadow-lg">
@@ -157,11 +169,11 @@ const FormRestaurant = ({ categorias }) => {
                       checked={categoriaSelecionada.includes(categoria.id)}
                       onChange={(e) => {
                         const id = e.target.value;
-                        if (categoriaSelecionada.includes(id)) {
-                          setCategoriaSelecionada(categoriaSelecionada.filter((item) => item !== id));
-                        } else {
-                          setCategoriaSelecionada([...categoriaSelecionada, id]);
-                        }
+                        setCategoriaSelecionada((prevSelecionadas) =>
+                          prevSelecionadas.includes(id)
+                            ? prevSelecionadas.filter((item) => item !== id)
+                            : [...prevSelecionadas, id]
+                        );
                       }}
                       className="mr-2"
                     />

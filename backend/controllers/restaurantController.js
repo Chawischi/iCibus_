@@ -1,83 +1,123 @@
-const sequelize = require('../config/db');
-const Restaurante = require('../models/Restaurante')(sequelize);
+const db = require('../models');
+const { Restaurante, Categoria } = db;
 const slugify = require('slugify');
+const { v4: uuidv4 } = require('uuid');
 
-// Criar restaurante
+
 const createRestaurante = async (req, res) => {
   try {
-    const { nome, telefone, endereco, horario, sobreNos } = req.body;
+    const { nome, telefone, endereco, horario, sobreNos, categoriaIds } = req.body;
 
-    let categorias = [];
-    if (req.body['categoriaIds[]']) {
-      // Se o 'categoriaIds[]' for um array de categorias
-      categorias = Array.isArray(req.body['categoriaIds[]']) 
-        ? req.body['categoriaIds[]']
-        : [req.body['categoriaIds[]']]; // Caso contrário, converte em array
+    if (!nome || !req.file) {
+      return res.status(400).json({ message: 'Nome e imagem são obrigatórios.' });
     }
 
-    // Validar e garantir que as categorias sejam válidas
-    categorias = categorias.filter(id => typeof id === 'string' && id.trim().length > 0);
+    const slug = slugify(nome, { lower: true });
 
-    // Salvar imagem, se houver
-    let imagemPath = '';
-    if (req.file) {
-      imagemPath = req.file.filename;
-    }
-
-    // Criar restaurante
     const restaurante = await Restaurante.create({
+      id: uuidv4(),
       nome,
       telefone,
       endereco,
       horario,
       sobreNos,
-      imagem: imagemPath,
-      slug: slugify(nome, { lower: true, strict: true }),
-      categoriaId: categorias, // Passar o array de categorias aqui
+      imagem: req.file.filename, // salva o nome do arquivo
+      slug
     });
 
-    // Retornar o restaurante criado
-    res.status(201).json({ message: 'Restaurante criado com sucesso', restaurante: restaurante.toJSON() });
+    // Associações com categorias
+    if (categoriaIds && categoriaIds.length > 0) {
+      const categorias = await Categoria.findAll({
+        where: {
+          id: categoriaIds
+        }
+      });
+
+      await restaurante.setCategoria(categorias);
+      console.log('Categorias associadas com sucesso:', categorias.map(c => c.nome));
+    }
+
+    // Retorno com categorias incluídas
+    const restauranteComCategorias = await Restaurante.findOne({
+      where: { id: restaurante.id },
+      include: Categoria
+    });
+
+    return res.status(201).json({
+      message: 'Restaurante criado com sucesso',
+      restaurante: restauranteComCategorias
+    });
+
   } catch (err) {
     console.error('Erro ao criar restaurante:', err);
-    res.status(500).json({ error: 'Erro ao criar restaurante' });
+    return res.status(500).json({ message: 'Erro ao criar restaurante' });
   }
 };
-
 
 // Buscar todos os restaurantes
 const getAllRestaurantes = async (req, res) => {
   try {
-    const restaurantes = await Restaurante.findAll();
-    res.json(restaurantes);
+    const restaurantes = await Restaurante.findAll({
+      include: {
+        model: Categoria,
+        through: { attributes: [] },
+        attributes: ['id', 'nome'],
+      },
+    });
+
+    console.log('Restaurantes buscados:', restaurantes.map(r => r.toJSON()));
+
+    res.json({ success: true, restaurantes });
   } catch (err) {
     console.error('Erro ao buscar restaurantes:', err);
-    res.status(500).json({ error: 'Erro ao buscar restaurantes' });
+    res.status(500).json({ success: false, message: 'Erro ao buscar restaurantes', detalhes: err.message });
   }
 };
+
+
 
 // Buscar restaurante por ID
 const getRestauranteById = async (req, res) => {
   const { id } = req.params;
   try {
-    const restaurante = await Restaurante.findByPk(id);
-    if (!restaurante) return res.status(404).json({ error: 'Restaurante não encontrado' });
+    const restaurante = await Restaurante.findByPk(id, {
+      include: {
+        model: Categoria,
+        through: { attributes: [] },
+      },
+    });
+
+    if (!restaurante) {
+      console.warn('Restaurante não encontrado:', id);
+      return res.status(404).json({ error: 'Restaurante não encontrado' });
+    }
+
+    console.log('Restaurante encontrado:', restaurante.toJSON());
     res.json(restaurante);
   } catch (err) {
     console.error('Erro ao buscar restaurante:', err);
-    res.status(500).json({ error: 'Erro ao buscar restaurante' });
+    res.status(500).json({ error: 'Erro ao buscar restaurante', detalhes: err.message });
   }
 };
 
 // Atualizar restaurante
 const updateRestaurante = async (req, res) => {
   const { id } = req.params;
-  const { nome, sobreNos, horario, telefone, categoria } = req.body;
+  const { nome, sobreNos, horario, telefone, endereco } = req.body;
+  let categoriaIds = req.body['categoriaIds[]'];
+  if (!categoriaIds) categoriaIds = [];
+  if (!Array.isArray(categoriaIds)) categoriaIds = [categoriaIds];
+
   const imagem = req.file ? req.file.filename : null;
 
   try {
     const restaurante = await Restaurante.findByPk(id);
-    if (!restaurante) return res.status(404).json({ error: 'Restaurante não encontrado' });
+    if (!restaurante) {
+      console.warn('Restaurante não encontrado para atualização:', id);
+      return res.status(404).json({ error: 'Restaurante não encontrado' });
+    }
+
+    console.log('Atualizando restaurante:', restaurante.toJSON());
 
     if (nome) {
       restaurante.nome = nome;
@@ -86,15 +126,31 @@ const updateRestaurante = async (req, res) => {
     if (sobreNos) restaurante.sobreNos = sobreNos;
     if (horario) restaurante.horario = horario;
     if (telefone) restaurante.telefone = telefone;
+    if (endereco) restaurante.endereco = endereco;
     if (imagem) restaurante.imagem = imagem;
-    if (categoria && Array.isArray(categoria)) restaurante.categoria = categoria;
 
     await restaurante.save();
+    console.log('Restaurante atualizado:', restaurante.toJSON());
 
-    res.json(restaurante);
+    // Atualizar categorias associadas
+    if (categoriaIds.length > 0) {
+      await restaurante.setCategorias(categoriaIds);
+      console.log('Categorias atualizadas:', categoriaIds);
+    }
+
+    const atualizado = await Restaurante.findByPk(id, {
+      include: {
+        model: Categoria,
+        through: { attributes: [] },
+      },
+    });
+
+    console.log('Restaurante final após atualização:', atualizado.toJSON());
+
+    res.json(atualizado);
   } catch (err) {
     console.error('Erro ao atualizar restaurante:', err);
-    res.status(500).json({ error: 'Erro ao atualizar restaurante' });
+    res.status(500).json({ error: 'Erro ao atualizar restaurante', detalhes: err.message });
   }
 };
 
@@ -103,13 +159,18 @@ const deleteRestaurante = async (req, res) => {
   const { id } = req.params;
   try {
     const restaurante = await Restaurante.findByPk(id);
-    if (!restaurante) return res.status(404).json({ error: 'Restaurante não encontrado' });
+    if (!restaurante) {
+      console.warn('Restaurante não encontrado para deleção:', id);
+      return res.status(404).json({ error: 'Restaurante não encontrado' });
+    }
 
     await restaurante.destroy();
+    console.log('Restaurante deletado:', id);
+
     res.json({ message: 'Restaurante deletado com sucesso' });
   } catch (err) {
     console.error('Erro ao deletar restaurante:', err);
-    res.status(500).json({ error: 'Erro ao deletar restaurante' });
+    res.status(500).json({ error: 'Erro ao deletar restaurante', detalhes: err.message });
   }
 };
 

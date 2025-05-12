@@ -17,9 +17,17 @@ module.exports = (sequelize) => {
       unique: true
     },
     imagem: {
-      type: DataTypes.STRING // caminho da imagem
+      type: DataTypes.STRING 
     }
   });
+
+  Categoria.associate = (models) => {
+    Categoria.belongsToMany(models.Restaurante, {
+      through: 'RestauranteCategoria',
+      foreignKey: 'categoriaId',
+      otherKey: 'restauranteId'
+    });
+  };
 
   return Categoria;
 };

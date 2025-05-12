@@ -9,12 +9,18 @@ export const createRestaurante = async (formData) => {
   }
 
   try {
+    // Verificar o que está sendo enviado no formData
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
+
     const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurantes`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
+        // Não é necessário definir 'Content-Type' ao usar FormData, ele é definido automaticamente pelo browser
       },
-      body: formData,
+      body: formData, // Envia o FormData com as categorias e outros dados
     });
 
     if (!response.ok) {
@@ -25,13 +31,13 @@ export const createRestaurante = async (formData) => {
 
     const data = await response.json();
     console.log("Restaurante criado com sucesso:", data);
+
     return data;
   } catch (err) {
     console.error("Erro ao criar restaurante:", err);
     throw new Error(err.message || 'Erro ao criar restaurante');
   }
 };
-
 
 export const getRestaurants = async () => {
   const token = localStorage.getItem('token');
@@ -63,3 +69,5 @@ export const getRestaurants = async () => {
     throw new Error(err.message || 'Erro ao buscar restaurantes');
   }
 };
+
+

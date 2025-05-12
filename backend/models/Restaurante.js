@@ -29,12 +29,15 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    categoria: {
-      type: DataTypes.ARRAY(DataTypes.UUID),
-      allowNull: false,
-      defaultValue: []
-    }
   });
+
+  Restaurante.associate = (models) => {
+    Restaurante.belongsToMany(models.Categoria, {
+      through: 'RestauranteCategoria',
+      foreignKey: 'restauranteId',
+      otherKey: 'categoriaId'
+    });
+  };
 
   return Restaurante;
 };

@@ -25,9 +25,5 @@ module.exports = (sequelize) => {
     }
   });
 
-  ItemMenu.associate = (models) => {
-    ItemMenu.belongsTo(models.Restaurante, { foreignKey: 'restauranteId' });
-  };
-
   return ItemMenu;
 };
