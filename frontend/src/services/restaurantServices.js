@@ -1,18 +1,17 @@
 // restaurantServices.js
 
-export const createRestaurante = async (formData) => {
-  const token = localStorage.getItem('token');
-
+export const createRestaurante = async (formData, token) => {
   if (!token) {
     console.error('Token de autenticação ausente.');
     throw new Error('Token de autenticação ausente.');
   }
 
   try {
-    // Verificar o que está sendo enviado no formData
+
     for (let pair of formData.entries()) {
-      console.log(pair[0] + ': ' + pair[1]);
+      console.log(pair[0] + ": " + pair[1]);
     }
+
 
     const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurantes`, {
       method: 'POST',
@@ -70,4 +69,45 @@ export const getRestaurants = async () => {
   }
 };
 
+export const saveRestaurante = async (id, formData, token) => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurantes/${id}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
 
+    if (!response.ok) {
+      throw new Error(`Erro ao atualizar restaurante: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro em saveRestaurante:', error);
+    throw error;
+  }
+};
+
+export const deleteRestaurante = async (id, token) => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurantes/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro ao deletar restaurante: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro em deleteRestaurante:', error);
+    throw error;
+  }
+};

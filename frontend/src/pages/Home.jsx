@@ -5,7 +5,6 @@ import { getCategories } from '../services/categoryServices';
 const Home = () => {
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState('');
 
   useEffect(() => {
     const userToken = localStorage.getItem('token');
@@ -15,10 +14,9 @@ const Home = () => {
       return;
     }
 
-    setToken(userToken);
 
     const fetchCategories = async () => {
-      const result = await getCategories(userToken);
+      const result = await getCategories(userToken);  // Passando userToken diretamente
       if (result.success) {
         setCategorias(result.categories);
       } else {

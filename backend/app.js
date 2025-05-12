@@ -11,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
 
+
 // Rotas
 const authRoutes = require('./routes/authRoutes.js');
 const categoryRoutes = require('./routes/categoryRoutes');
@@ -21,6 +22,7 @@ app.use('/auth', authRoutes);
 app.use('/categorias', categoryRoutes);
 app.use('/restaurantes', restauranteRoutes);
 app.use('/itemmenu', itemMenuRoutes);
+app.use('/api/item-menu', itemMenuRoutes);
 
 // Sincronizar banco
 db.sequelize.sync({ force: false })

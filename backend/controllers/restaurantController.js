@@ -33,7 +33,9 @@ const createRestaurante = async (req, res) => {
         }
       });
 
-      await restaurante.setCategoria(categorias);
+
+
+      await restaurante.setCategorias(categorias);
       console.log('Categorias associadas com sucesso:', categorias.map(c => c.nome));
     }
 
@@ -60,6 +62,7 @@ const getAllRestaurantes = async (req, res) => {
     const restaurantes = await Restaurante.findAll({
       include: {
         model: Categoria,
+        as: 'categorias', // <<<<< aqui
         through: { attributes: [] },
         attributes: ['id', 'nome'],
       },
@@ -80,12 +83,18 @@ const getAllRestaurantes = async (req, res) => {
 const getRestauranteById = async (req, res) => {
   const { id } = req.params;
   try {
-    const restaurante = await Restaurante.findByPk(id, {
-      include: {
+    const restaurante = await Restaurante.findByPk(restauranteId, {
+      include: [{
         model: Categoria,
-        through: { attributes: [] },
-      },
+        through: { attributes: [] }  // Se for N:N
+      }]
     });
+
+    return res.json({
+      success: true,
+      restaurante
+    });
+
 
     if (!restaurante) {
       console.warn('Restaurante não encontrado:', id);
@@ -134,7 +143,7 @@ const updateRestaurante = async (req, res) => {
 
     // Atualizar categorias associadas
     if (categoriaIds.length > 0) {
-      await restaurante.setCategorias(categoriaIds);
+      await restaurante.setCategorias(categorias);
       console.log('Categorias atualizadas:', categoriaIds);
     }
 

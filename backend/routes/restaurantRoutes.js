@@ -8,7 +8,7 @@ const authenticate = require('../middleware/authMiddleware.js'); // Middleware J
 router.post('/', authenticate, upload.single('imagem'), restauranteController.createRestaurante);
 
 // Editar restaurante (com imagem e autenticação)
-router.put('/:id', authenticate, upload.single('imagem'), restauranteController.updateRestaurante);
+router.put('/:id', authenticate, upload.single('imagem'), restauranteController.updateRestaurante);''
 
 // Deletar restaurante (com autenticação)
 router.delete('/:id', authenticate, restauranteController.deleteRestaurante);

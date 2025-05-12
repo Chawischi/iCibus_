@@ -29,6 +29,10 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false
     },
+    endereco: {
+      type: DataTypes.STRING,
+      allowNull: false
+    }
   });
 
   Restaurante.associate = (models) => {

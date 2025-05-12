@@ -5,12 +5,14 @@ import Modal from "./components/Modal";
 import Home from "./pages/Home";
 import AdminPage from "./pages/adminPage";
 import { createCategory } from "./services/categoryServices";
+import { useNavigate } from "react-router-dom";
 
 function App() {
   const [modalType, setModalType] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userRole, setUserRole] = useState("");
+  const navigate = useNavigate();
 
   // Estado do formulário
   const [categoriaNome, setCategoriaNome] = useState("");
@@ -44,6 +46,7 @@ function App() {
     setIsLoggedIn(false);
     setUserEmail("");
     setUserRole("");
+    navigate("/")
   };
 
   // Função para enviar a categoria

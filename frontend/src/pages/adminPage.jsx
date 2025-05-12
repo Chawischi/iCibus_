@@ -13,6 +13,8 @@ const AdminPage = () => {
   const [categoriaSelecionadaId, setCategoriaSelecionadaId] = useState(null);
   const [categorias, setCategorias] = useState([]);
   const [restaurantes, setRestaurantes] = useState([]);  // Estado para armazenar restaurantes
+  const [selectedRestaurante, setSelectedRestaurante] = useState(null);
+  
 
   const token = localStorage.getItem("token");
 
@@ -137,16 +139,23 @@ const AdminPage = () => {
         <div className="w-full flex justify-center">
           <div className="w-full max-w-4xl space-y-4 px-4">
             {/* Passando categorias como prop para o FormRestaurant */}
-            <FormRestaurant categorias={categorias} />
+            <FormRestaurant
+              categorias={categorias}
+              selectedRestaurante={selectedRestaurante}
+              setSelectedRestaurante={setSelectedRestaurante}
+              atualizarLista={() => {
+                getRestaurants(token).then(result => {
+                  if (result.success) setRestaurantes(result.restaurantes);
+                });
+              }}
+              token={token}
+            />
 
             <div className="w-full flex justify-center">
               <div className="w-full max-w-4xl">
                 <ListRestaurantItem
                   restaurantes={restaurantes}
-                  onSelectRestaurant={(restaurant) => {
-                    // Você pode adicionar lógica ao selecionar o restaurante
-                    console.log(restaurant);
-                  }}
+                  onSelectRestaurant={setSelectedRestaurante}
                 />
               </div>
             </div>
