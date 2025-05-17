@@ -23,7 +23,7 @@ const createCategory = async (nome, imagem, token) => {
     return { success: false, message: "Erro ao criar categoria." };
   }
 };
-
+/*
 const getCategories = async (token) => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/categorias`, {
@@ -44,8 +44,27 @@ const getCategories = async (token) => {
     return { success: false, message: 'Erro ao buscar categorias.' };
   }
 };
+*/
 
- const deleteCategory = async (id, token) => {
+const getCategories = async () => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/categorias`, {
+      method: 'GET',
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return { success: true, categories: data };
+    } else {
+      return { success: false, message: 'Erro ao buscar categorias.' };
+    }
+  } catch (err) {
+    console.error(err);
+    return { success: false, message: 'Erro ao buscar categorias.' };
+  }
+};
+
+const deleteCategory = async (id, token) => {
   if (typeof id !== 'string') {
     console.error("ID inválido:", id); // Adicionando validação para garantir que o ID seja uma string
     return { success: false, message: "ID inválido" };
@@ -70,11 +89,11 @@ const getCategories = async (token) => {
     return { success: false, message: err.message || "Erro desconhecido ao excluir categoria." };
   }
 };
-export { 
+export {
   getCategories,
   deleteCategory,
   createCategory
- };
+};
 
 
 

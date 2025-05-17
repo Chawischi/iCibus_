@@ -5,20 +5,30 @@ import { createCategory, deleteCategory, getCategories } from "../services/categ
 import FormRestaurant from "../components/admin/FormRestaurant";
 import { getRestaurants } from "../services/restaurantServices";
 import ListRestaurantItem from "../components/ListRestaurantItem";
+import FormItemMenu from "../components/admin/FormItemMenu";
+import ListItemMenuItem from "../components/ListItemMenuItem";
+import { getItensMenuByRestauranteId } from "../services/ItemMenuServices";
 
 const AdminPage = () => {
   const [activeTab, setActiveTab] = useState("categoria");
+
+  // Categorias
   const [categoriaNome, setCategoriaNome] = useState("");
   const [categoriaImagem, setCategoriaImagem] = useState(null);
   const [categoriaSelecionadaId, setCategoriaSelecionadaId] = useState(null);
   const [categorias, setCategorias] = useState([]);
-  const [restaurantes, setRestaurantes] = useState([]);  // Estado para armazenar restaurantes
+
+  // Restaurantes
+  const [restaurantes, setRestaurantes] = useState([]);
   const [selectedRestaurante, setSelectedRestaurante] = useState(null);
-  
+
+  // Itens de Menu
+  const [itensMenu, setItensMenu] = useState([]);
+  const [itemSelecionado, setItemSelecionado] = useState(null);
 
   const token = localStorage.getItem("token");
 
-  // Fetch para categorias
+  // Fetch categorias
   useEffect(() => {
     const fetchCategorias = async () => {
       const result = await getCategories(token);
@@ -31,12 +41,11 @@ const AdminPage = () => {
     fetchCategorias();
   }, [token]);
 
-  // Fetch para restaurantes
+  // Fetch restaurantes
   useEffect(() => {
     const fetchRestaurantes = async () => {
       try {
         const result = await getRestaurants(token);
-        console.log("Resultado da busca de restaurantes:", result); // Log para verificar a resposta
         if (result.success) {
           setRestaurantes(result.restaurantes);
         } else {
@@ -46,15 +55,30 @@ const AdminPage = () => {
         console.error("Erro inesperado ao buscar restaurantes:", err);
       }
     };
-    if (activeTab === "restaurante") {
+
+    if (["restaurante", "itensMenu"].includes(activeTab)) {
       fetchRestaurantes();
     }
   }, [activeTab, token]);
 
+  // Fetch itens de menu ao selecionar restaurante
+  useEffect(() => {
+    const fetchItens = async () => {
+      if (selectedRestaurante) {
+        const result = await getItensMenuByRestauranteId(selectedRestaurante.id, token);
+        if (result.success) {
+          setItensMenu(result.itensMenu);
+        } else {
+          console.error(result.message || "Erro ao buscar itens de menu.");
+        }
+      }
+    };
+    fetchItens();
+  }, [selectedRestaurante, token]);
 
+  // Categoria - Create
   const handleCategoriaSubmit = async (e) => {
     e.preventDefault();
-
     if (!categoriaNome || !categoriaImagem) {
       alert("Preencha todos os campos!");
       return;
@@ -72,6 +96,7 @@ const AdminPage = () => {
     }
   };
 
+  // Categoria - Delete
   const handleDeleteCategoria = async (id) => {
     if (!id || typeof id !== "string") {
       alert("ID da categoria inválido.");
@@ -83,7 +108,6 @@ const AdminPage = () => {
       setCategoriaNome("");
       setCategoriaImagem(null);
       setCategoriaSelecionadaId(null);
-      // Recarrega as categorias
       const atualizar = await getCategories(token);
       if (atualizar.success) setCategorias(atualizar.categories);
     } else {
@@ -93,6 +117,7 @@ const AdminPage = () => {
 
   return (
     <div className="pt-6 px-4 w-full min-h-screen flex flex-col items-center space-y-6">
+      {/* Tabs */}
       <div className="flex space-x-4">
         {["categoria", "restaurante", "itensMenu"].map((tab) => (
           <button
@@ -106,6 +131,7 @@ const AdminPage = () => {
         ))}
       </div>
 
+      {/* CATEGORIAS */}
       {activeTab === "categoria" && (
         <div className="w-full flex justify-center">
           <div className="w-full max-w-4xl space-y-4 px-4">
@@ -135,10 +161,10 @@ const AdminPage = () => {
         </div>
       )}
 
+      {/* RESTAURANTES */}
       {activeTab === "restaurante" && (
         <div className="w-full flex justify-center">
           <div className="w-full max-w-4xl space-y-4 px-4">
-            {/* Passando categorias como prop para o FormRestaurant */}
             <FormRestaurant
               categorias={categorias}
               selectedRestaurante={selectedRestaurante}
@@ -159,6 +185,46 @@ const AdminPage = () => {
                 />
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ITENS DE MENU */}
+      {activeTab === "itensMenu" && (
+        <div className="w-full flex justify-center">
+          <div className="w-full max-w-4xl space-y-4 px-4">
+            {/* FormItemMenu agora recebe props para controle externo */}
+            <FormItemMenu
+              restaurantes={restaurantes}
+              restauranteSelecionado={selectedRestaurante}
+              setRestauranteSelecionado={(restaurante) => {
+                setSelectedRestaurante(restaurante);
+                setItensMenu([]);
+                setItemSelecionado(null);
+
+                if (restaurante) {
+                  getItensMenuByRestauranteId(restaurante.id, token).then(result => {
+                    if (result.success) setItensMenu(result.itensMenu);
+                  });
+                }
+              }}
+              itemSelecionado={itemSelecionado}
+              setItemSelecionado={setItemSelecionado}
+              token={token}
+              atualizarItens={async () => {
+                if (selectedRestaurante) {
+                  const result = await getItensMenuByRestauranteId(selectedRestaurante.id, token);
+                  if (result.success) setItensMenu(result.itensMenu);
+                }
+              }}
+            />
+
+
+            {/* Lista visual e interativa de itens de menu */}
+            <ListItemMenuItem
+              itens={itensMenu}
+              onSelectItem={(item) => setItemSelecionado(item)}
+            />
           </div>
         </div>
       )}

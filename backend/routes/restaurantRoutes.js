@@ -19,4 +19,7 @@ router.get('/', restauranteController.getAllRestaurantes);
 // Buscar restaurante por ID (público)
 router.get('/:id', restauranteController.getRestauranteById);
 
+// buscar restaurante pelo ID da categoria
+router.get('/categoria/:categoryId', restauranteController.getRestaurantsByCategory);
+
 module.exports = router;

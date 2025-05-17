@@ -21,8 +21,7 @@ const itemMenuRoutes = require('./routes/itemMenuRoutes');
 app.use('/auth', authRoutes);
 app.use('/categorias', categoryRoutes);
 app.use('/restaurantes', restauranteRoutes);
-app.use('/itemmenu', itemMenuRoutes);
-app.use('/api/item-menu', itemMenuRoutes);
+app.use('/itemMenu', itemMenuRoutes);
 
 // Sincronizar banco
 db.sequelize.sync({ force: false })

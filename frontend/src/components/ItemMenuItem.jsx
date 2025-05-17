@@ -1,33 +1,26 @@
 import PropTypes from 'prop-types';
 import { useState, useEffect, useRef } from 'react';
 
-const RestaurantItem = ({ name, category, image, isSelected, onClick }) => {
+const ItemMenuItem = ({ nome, preco, image, isSelected, onClick }) => {
   const [isSelectedLocal, setIsSelectedLocal] = useState(isSelected);
   const cardRef = useRef(null);
 
-  // Função para desmarcar quando clicar fora
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (cardRef.current && !cardRef.current.contains(event.target)) {
-        setIsSelectedLocal(false); // Desmarcar se o clique foi fora
+        setIsSelectedLocal(false);
       }
     };
 
-    // Adicionar o evento de clique fora
-    document.addEventListener('mousedown', handleClickOutside); 
-
-    // Limpar o evento quando o componente for desmontado
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
-  // Função para lidar com o clique no card
   const handleCardClick = () => {
-    setIsSelectedLocal(!isSelectedLocal); // Alterna a seleção
-    if (onClick) {
-      onClick(); // Chama a função de callback (passada como prop)
-    }
+    setIsSelectedLocal(!isSelectedLocal);
+    if (onClick) onClick();
   };
 
   return (
@@ -42,24 +35,24 @@ const RestaurantItem = ({ name, category, image, isSelected, onClick }) => {
       <div className="w-full h-2/3">
         <img
           src={`${import.meta.env.VITE_API_URL}/uploads/${image}`}
-          alt={name}
+          alt={nome}
           className="w-full h-full object-cover group-hover:scale-110 transition-all duration-200"
         />
       </div>
       <div className="h-1/3 px-2 py-1 flex flex-col justify-center">
-        <h3 className="text-sm font-semibold truncate text-center group-hover:text-primary">{name}</h3>
-        <p className="text-xs text-gray-500 truncate text-center group-hover:text-primary">{category}</p>
+        <h3 className="text-sm font-semibold truncate text-center group-hover:text-primary">{nome}</h3>
+        <p className="text-xs text-gray-500 truncate text-center group-hover:text-primary">R$ {Number(preco).toFixed(2)}</p>
       </div>
     </div>
   );
 };
 
-RestaurantItem.propTypes = {
-  name: PropTypes.string.isRequired,
-  category: PropTypes.string.isRequired,
+ItemMenuItem.propTypes = {
+  nome: PropTypes.string.isRequired,
+  preco: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   image: PropTypes.string.isRequired,
   isSelected: PropTypes.bool,
   onClick: PropTypes.func.isRequired,
 };
 
-export default RestaurantItem;
+export default ItemMenuItem;

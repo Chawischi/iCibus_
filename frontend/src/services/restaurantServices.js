@@ -17,9 +17,8 @@ export const createRestaurante = async (formData, token) => {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
-        // Não é necessário definir 'Content-Type' ao usar FormData, ele é definido automaticamente pelo browser
       },
-      body: formData, // Envia o FormData com as categorias e outros dados
+      body: formData,
     });
 
     if (!response.ok) {
@@ -108,6 +107,59 @@ export const deleteRestaurante = async (id, token) => {
     return data;
   } catch (error) {
     console.error('Erro em deleteRestaurante:', error);
+    throw error;
+  }
+};
+
+export const getRestaurantsByCategory = async (categoryId) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Token de autenticação ausente.');
+  }
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurantes/categoria/${categoryId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Falha ao buscar restaurantes por categoria');
+    }
+
+    const data = await response.json();
+    return data.restaurantes;  // Retorna array de restaurantes
+  } catch (error) {
+    console.error('Erro ao buscar restaurantes por categoria:', error);
+    throw error;
+  }
+};
+
+export const getRestaurantById = async (id, token) => {
+  if (!token) {
+    throw new Error('Token de autenticação ausente.');
+  }
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurantes/${id}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Falha ao buscar restaurante por ID');
+    }
+
+    const data = await response.json();
+    return data; // Supondo que já retorna os dados completos, incluindo categorias e itens
+  } catch (error) {
+    console.error('Erro ao buscar restaurante por ID:', error);
     throw error;
   }
 };

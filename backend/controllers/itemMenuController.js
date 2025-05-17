@@ -1,5 +1,5 @@
 // controllers/itemMenuController.js
-const { ItemMenu } = require('../models/ItemMenu');
+const { ItemMenu } = require("../models");
 const slugify = require('slugify');
 const path = require('path');
 const fs = require('fs');
@@ -11,6 +11,7 @@ const createItemMenu = async (req, res) => {
 
     const slug = slugify(nome, { lower: true, strict: true });
 
+    console.log("ItemMenu é:", ItemMenu);
     const item = await ItemMenu.create({
       nome,
       slug,
@@ -103,10 +104,27 @@ const deleteItemMenu = async (req, res) => {
   }
 };
 
+// aqui talvez precise de mudança
+const getItensByRestaurante = async (req, res) => {
+  const { restauranteId } = req.params;
+  try {
+    const itens = await ItemMenu.findAll({
+      where: { restauranteId }
+    });
+    res.json(itens);
+  } catch (err) {
+    console.error('Erro ao buscar itens por restaurante:', err);
+    res.status(500).json({ error: 'Erro ao buscar itens por restaurante' });
+  }
+};
+
+
+
 module.exports = {
   createItemMenu,
   updateItemMenu,
   getAllItensMenu,
   getItemMenuById,
   deleteItemMenu,
+  getItensByRestaurante,
 };

@@ -10,6 +10,7 @@ const {
   getAllItensMenu,
   getItemMenuById,
   deleteItemMenu,
+  getItensByRestaurante,
 } = require('../controllers/itemMenuController');
 
 const authenticateToken = require('../middleware/authMiddleware.js'); // Middleware JWT
@@ -35,5 +36,6 @@ router.delete('/:id', authenticateToken, deleteItemMenu);
 // Rotas públicas
 router.get('/', getAllItensMenu);
 router.get('/:id', getItemMenuById);
+router.get('/item/:restauranteId', getItensByRestaurante);
 
 module.exports = router;

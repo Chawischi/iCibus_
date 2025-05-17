@@ -35,7 +35,7 @@ const createRestaurante = async (req, res) => {
 
 
 
-      await restaurante.setCategorias(categorias);
+      await restaurante.setCategoria(categorias);
       console.log('Categorias associadas com sucesso:', categorias.map(c => c.nome));
     }
 
@@ -62,7 +62,6 @@ const getAllRestaurantes = async (req, res) => {
     const restaurantes = await Restaurante.findAll({
       include: {
         model: Categoria,
-        as: 'categorias', // <<<<< aqui
         through: { attributes: [] },
         attributes: ['id', 'nome'],
       },
@@ -83,18 +82,12 @@ const getAllRestaurantes = async (req, res) => {
 const getRestauranteById = async (req, res) => {
   const { id } = req.params;
   try {
-    const restaurante = await Restaurante.findByPk(restauranteId, {
+    const restaurante = await Restaurante.findByPk(id, {
       include: [{
         model: Categoria,
         through: { attributes: [] }  // Se for N:N
       }]
     });
-
-    return res.json({
-      success: true,
-      restaurante
-    });
-
 
     if (!restaurante) {
       console.warn('Restaurante não encontrado:', id);
@@ -102,13 +95,16 @@ const getRestauranteById = async (req, res) => {
     }
 
     console.log('Restaurante encontrado:', restaurante.toJSON());
-    res.json(restaurante);
+    return res.json({
+      success: true,
+      restaurante
+    });
+    
   } catch (err) {
     console.error('Erro ao buscar restaurante:', err);
     res.status(500).json({ error: 'Erro ao buscar restaurante', detalhes: err.message });
   }
 };
-
 // Atualizar restaurante
 const updateRestaurante = async (req, res) => {
   const { id } = req.params;
@@ -183,10 +179,32 @@ const deleteRestaurante = async (req, res) => {
   }
 };
 
+// Buscar restaurantes pela categoria (id)
+const getRestaurantsByCategory = async (req, res) => {
+  const { categoryId } = req.params;
+
+  try {
+    const restaurantes = await Restaurante.findAll({
+      include: [{
+        model: Categoria,
+        where: { id: categoryId },
+        through: { attributes: [] }
+      }],
+    });
+
+    return res.json({ success: true, restaurantes });
+  } catch (err) {
+    console.error('Erro ao buscar restaurantes por categoria:', err);
+    return res.status(500).json({ success: false, message: 'Erro ao buscar restaurantes por categoria.' });
+  }
+};
+
+
 module.exports = {
   createRestaurante,
   getAllRestaurantes,
   getRestauranteById,
   updateRestaurante,
   deleteRestaurante,
+  getRestaurantsByCategory,
 };

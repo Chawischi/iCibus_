@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import AdminPage from "./pages/adminPage";
 import { createCategory } from "./services/categoryServices";
 import { useNavigate } from "react-router-dom";
+import RestaurantPage from './pages/restaurantPage';
 
 function App() {
   const [modalType, setModalType] = useState(null);
@@ -107,6 +108,7 @@ function App() {
             />
           }
         />
+        <Route path="/restaurant/:id" element={<RestaurantPage />} />
       </Routes>
     </div>
   );
