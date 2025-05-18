@@ -1,5 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL;
-
+/*
 export async function getItensMenuByRestauranteId(restauranteId, token) {
   try {
     const response = await fetch(`${API_URL}/itemMenu/item/${restauranteId}`, {
@@ -19,7 +19,23 @@ export async function getItensMenuByRestauranteId(restauranteId, token) {
     return { success: false, message: error.message };
   }
 }
+*/
 
+export async function getItensMenuByRestauranteId(restauranteId) {
+  try {
+    const response = await fetch(`${API_URL}/itemMenu/item/${restauranteId}`);
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Erro ao buscar itens');
+    }
+
+    return { success: true, itensMenu: data }; 
+  } catch (error) {
+    console.error('Erro na requisição:', error);
+    return { success: false, message: error.message };
+  }
+}
 
 
 export const createItemMenu = async (formData, token) => {

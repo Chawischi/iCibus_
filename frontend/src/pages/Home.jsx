@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import HomeListCategory from '../components/HomeListCategory';
-import HomeListRestaurant from '../components/HomeListRestaurant'; // ✅ Importado aqui
+import HomeListRestaurant from '../components/HomeListRestaurant';
 import { getCategories } from '../services/categoryServices';
 import { getRestaurantsByCategory } from '../services/restaurantServices';
 
@@ -13,23 +13,21 @@ const Home = () => {
 
   useEffect(() => {
     const fetchCategories = async () => {
-      const userToken = localStorage.getItem('token');
-      if (!userToken) {
-        console.error('Token não encontrado.');
+      try {
+        const result = await getCategories(); // ✅ Sem token agora
+        if (result.success) {
+          setCategorias(result.categories);
+          setError(null);
+        } else {
+          console.error(result.message);
+          setError(result.message || 'Erro ao buscar categorias.');
+        }
+      } catch (err) {
+        console.error('Erro ao buscar categorias:', err);
+        setError('Erro ao buscar categorias.');
+      } finally {
         setLoading(false);
-        setError('Usuário não autenticado.');
-        return;
       }
-
-      const result = await getCategories(userToken);
-      if (result.success) {
-        setCategorias(result.categories);
-        setError(null);
-      } else {
-        console.error(result.message);
-        setError(result.message || 'Erro ao buscar categorias.');
-      }
-      setLoading(false);
     };
 
     fetchCategories();
@@ -39,7 +37,7 @@ const Home = () => {
     setLoadingRestaurants(true);
     setError(null);
     try {
-      const restaurantesData = await getRestaurantsByCategory(category.id);
+      const restaurantesData = await getRestaurantsByCategory(category.id); // ✅ Já está sem token
       setRestaurantes(restaurantesData);
     } catch (err) {
       setError(err.message || 'Erro ao buscar restaurantes.');
@@ -72,7 +70,7 @@ const Home = () => {
               />
             </div>
           ) : (
-              <h2 className="text-xl font-bold mb-4 text-center">Restaurantes</h2>
+            <h2 className="text-xl font-bold mb-4 text-center">Restaurantes</h2>
           )}
         </>
       ) : (

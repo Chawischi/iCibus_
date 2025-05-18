@@ -24,13 +24,10 @@ const createCategory = async (nome, imagem, token) => {
   }
 };
 /*
-const getCategories = async (token) => {
+const getCategories = async () => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/categorias`, {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
 
     if (response.ok) {
@@ -66,7 +63,7 @@ const getCategories = async () => {
 
 const deleteCategory = async (id, token) => {
   if (typeof id !== 'string') {
-    console.error("ID inválido:", id); // Adicionando validação para garantir que o ID seja uma string
+    console.error("ID inválido:", id);
     return { success: false, message: "ID inválido" };
   }
 

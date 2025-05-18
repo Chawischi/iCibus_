@@ -36,7 +36,7 @@ export const createRestaurante = async (formData, token) => {
     throw new Error(err.message || 'Erro ao criar restaurante');
   }
 };
-
+/*
 export const getRestaurants = async () => {
   const token = localStorage.getItem('token');
 
@@ -51,6 +51,28 @@ export const getRestaurants = async () => {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Erro ao buscar restaurantes:", errorData);
+      throw new Error(errorData.message || 'Falha ao buscar restaurantes');
+    }
+
+    const data = await response.json();
+    console.log("Dados de restaurantes recebidos:", data);
+    return data;
+  } catch (err) {
+    console.error("Erro ao buscar restaurantes:", err);
+    throw new Error(err.message || 'Erro ao buscar restaurantes');
+  }
+};
+*/
+
+export const getRestaurants = async () => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurantes`, {
+      method: 'GET',
     });
 
     if (!response.ok) {
@@ -110,7 +132,7 @@ export const deleteRestaurante = async (id, token) => {
     throw error;
   }
 };
-
+/*
 export const getRestaurantsByCategory = async (categoryId) => {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -137,7 +159,27 @@ export const getRestaurantsByCategory = async (categoryId) => {
     throw error;
   }
 };
+*/
 
+export const getRestaurantsByCategory = async (categoryId) => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurantes/categoria/${categoryId}`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Falha ao buscar restaurantes por categoria');
+    }
+
+    const data = await response.json();
+    return data.restaurantes;
+  } catch (error) {
+    console.error('Erro ao buscar restaurantes por categoria:', error);
+    throw error;
+  }
+};
+/*
 export const getRestaurantById = async (id, token) => {
   if (!token) {
     throw new Error('Token de autenticação ausente.');
@@ -162,4 +204,24 @@ export const getRestaurantById = async (id, token) => {
     console.error('Erro ao buscar restaurante por ID:', error);
     throw error;
   }
+};*/
+
+export const getRestaurantById = async (id) => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurantes/${id}`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Falha ao buscar restaurante por ID');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao buscar restaurante por ID:', error);
+    throw error;
+  }
 };
+
