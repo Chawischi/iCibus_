@@ -5,7 +5,7 @@ module.exports = (sequelize) => {
   const Imagem = sequelize.define('Imagem', {
     id: {
       type: DataTypes.UUID,
-      defaultValue: uuidv4,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true
     },
     url: {

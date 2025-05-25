@@ -1,23 +1,25 @@
-const app = require('../app'); 
+const app = require('../app');
 const db = require('../models');
 const { Restaurante, Categoria } = db;
+const request = require('supertest');
+const path = require('path');
 
 describe('Restaurante API', () => {
   let restauranteId;
   let categoriaId;
 
   beforeAll(async () => {
-    // Limpar tabelas para ambiente de teste
-    await Restaurante.destroy({ where: {}, truncate: true });
-    await Categoria.destroy({ where: {}, truncate: true });
+    await Restaurante.destroy({ where: {} });
+    await Categoria.destroy({ where: {} });
 
-    // Criar uma categoria para associar nos testes
-    const categoria = await Categoria.create({ id: 'test-cat-1', nome: 'Teste Categoria' });
+    const categoria = await Categoria.create({ nome: 'Teste Categoria' });
     categoriaId = categoria.id;
   });
 
+
+
   afterAll(async () => {
-    await db.sequelize.close(); // fechar conexão com banco após testes
+    await db.sequelize.close();
   });
 
   it('Deve criar um restaurante com categoria', async () => {
@@ -29,7 +31,7 @@ describe('Restaurante API', () => {
       .field('horario', '9h às 18h')
       .field('sobreNos', 'Um restaurante para testes')
       .field('categoriaIds[]', categoriaId)
-      .attach('imagem', 'tests/files/imagem-teste.jpg'); // precisa ter uma imagem de teste neste caminho
+      .attach('imagem', path.resolve(__dirname, 'files/imagem-teste.jpg'));
 
     expect(res.statusCode).toBe(201);
     expect(res.body.restaurante.nome).toBe('Restaurante Teste');

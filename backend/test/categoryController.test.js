@@ -3,15 +3,15 @@ const sequelize = require('../config/db');
 const fs = require('fs');
 const path = require('path');
 
-const Categoria = {
+jest.mock('../models/Categoria', () => ({
   create: jest.fn(),
   findByPk: jest.fn(),
   findAll: jest.fn(),
-};
-
-jest.mock('../models/Categoria', () => () => Categoria);
+}));
 
 jest.mock('fs');
+
+const Categoria = require('../models/Categoria'); // Agora pega o mock criado pelo jest.mock
 
 describe('Category Controller', () => {
   let req, res;
@@ -58,7 +58,7 @@ describe('Category Controller', () => {
       }));
     });
   });
-
+  
   describe('updateCategory', () => {
     it('deve retornar 404 se categoria não encontrada', async () => {
       req.params.id = '123';
@@ -143,7 +143,7 @@ describe('Category Controller', () => {
       const cat = { id: '1', imagem: 'img.jpg', destroy: jest.fn().mockResolvedValue(true) };
       Categoria.findByPk.mockResolvedValue(cat);
       fs.existsSync.mockReturnValue(true);
-      fs.unlinkSync.mockImplementation(() => {});
+      fs.unlinkSync.mockImplementation(() => { });
 
       await categoryController.deleteCategory(req, res);
 

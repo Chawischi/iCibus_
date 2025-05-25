@@ -5,7 +5,7 @@ module.exports = (sequelize) => {
   const Categoria = sequelize.define('Categoria', {
     id: {
       type: DataTypes.UUID,
-      defaultValue: uuidv4,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true
     },
     nome: {
@@ -17,7 +17,7 @@ module.exports = (sequelize) => {
       unique: true
     },
     imagem: {
-      type: DataTypes.STRING 
+      type: DataTypes.STRING
     }
   });
 
