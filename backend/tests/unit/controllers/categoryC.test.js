@@ -1,44 +1,48 @@
 const path = require('path');
+const fs = require('fs');
 
-const Categoria = require(path.resolve(__dirname, '../../../models/Categoria'))(require(path.resolve(__dirname, '../../../config/db')));
+let Categoria;
+let createCategory, updateCategory, getAllCategories, getCategoryById, deleteCategory;
 
-jest.spyOn(Categoria, 'create').mockImplementation(jest.fn());
-jest.spyOn(Categoria, 'findByPk').mockImplementation(jest.fn());
-jest.spyOn(Categoria, 'findAll').mockImplementation(jest.fn());
-jest.spyOn(Categoria, 'destroy').mockImplementation(jest.fn());
-jest.spyOn(Categoria, 'update').mockImplementation(jest.fn());
+jest.mock('fs');
 
-// importar controllers normalmente
-const {
-  createCategory,
-  updateCategory,
-  getAllCategories,
-  getCategoryById,
-  deleteCategory
-} = require(path.resolve(__dirname, '../../../controllers/categoryController'));
+beforeAll(() => {
+  const db = require(path.resolve(__dirname, '../../../config/db'));
+  Categoria = require(path.resolve(__dirname, '../../../models/Categoria'))(db);
+
+  // Mock dos métodos do model Categoria
+  Categoria.create = jest.fn();
+  Categoria.findByPk = jest.fn();
+  Categoria.findAll = jest.fn();
+  Categoria.destroy = jest.fn();
+  Categoria.update = jest.fn();
+
+  // Importa o controller depois dos mocks
+  ({
+    createCategory,
+    updateCategory,
+    getAllCategories,
+    getCategoryById,
+    deleteCategory,
+  } = require(path.resolve(__dirname, '../../../controllers/categoryController')));
+});
 
 describe('Category Controller', () => {
   let req, res;
 
   beforeEach(() => {
-    req = {
-      body: {},
-      params: {},
-      file: null,
-    };
-
+    req = { body: {}, params: {}, file: null };
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
-
     jest.clearAllMocks();
   });
 
+  // CREATE
   describe('createCategory', () => {
-    it('deve retornar 400 se nome ou imagem não forem enviados', async () => {
+    it('retorna 400 se nome ou imagem não forem enviados', async () => {
       req.body = { nome: '' };
-      req.file = null;
 
       await createCategory(req, res);
 
@@ -46,32 +50,26 @@ describe('Category Controller', () => {
       expect(res.json).toHaveBeenCalledWith({ message: 'Nome e imagem são obrigatórios.' });
     });
 
-    it('deve criar categoria e retornar 201', async () => {
-      req.body = { nome: 'Teste Categoria' };
-      req.file = { filename: 'imagem.jpg' };
+    it('cria categoria e retorna 201', async () => {
+      req.body = { nome: 'Nova Categoria' };
+      req.file = { filename: 'img.jpg' };
+      const novaCategoria = { id: 'uuid', nome: 'Nova Categoria', slug: 'nova-categoria', imagem: 'img.jpg' };
 
-      const fakeCategory = {
-        id: 'uuid',
-        nome: 'Teste Categoria',
-        slug: 'teste-categoria',
-        imagem: 'imagem.jpg',
-      };
-
-      Categoria.create.mockResolvedValue(fakeCategory);
+      Categoria.create.mockResolvedValue(novaCategoria);
 
       await createCategory(req, res);
 
       expect(Categoria.create).toHaveBeenCalledWith(expect.objectContaining({
-        nome: 'Teste Categoria',
-        imagem: 'imagem.jpg',
+        nome: 'Nova Categoria',
+        imagem: 'img.jpg',
       }));
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith(fakeCategory);
+      expect(res.json).toHaveBeenCalledWith(novaCategoria);
     });
 
-    it('deve retornar 500 em caso de erro', async () => {
-      req.body = { nome: 'Teste' };
-      req.file = { filename: 'imagem.jpg' };
+    it('retorna 500 se ocorrer erro na criação', async () => {
+      req.body = { nome: 'Erro' };
+      req.file = { filename: 'img.jpg' };
       Categoria.create.mockRejectedValue(new Error('Erro'));
 
       await createCategory(req, res);
@@ -81,9 +79,10 @@ describe('Category Controller', () => {
     });
   });
 
+  // UPDATE
   describe('updateCategory', () => {
-    it('deve retornar 404 se categoria não existir', async () => {
-      req.params = { id: '1' };
+    it('retorna 404 se categoria não for encontrada', async () => {
+      req.params.id = '123';
       Categoria.findByPk.mockResolvedValue(null);
 
       await updateCategory(req, res);
@@ -92,54 +91,51 @@ describe('Category Controller', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Categoria não encontrada' });
     });
 
-    it('deve atualizar nome e imagem e retornar a categoria', async () => {
-      req.params = { id: '1' };
-      req.body = { nome: 'Categoria Atualizada' };
-      req.file = { filename: 'nova-imagem.jpg' };
+    it('atualiza nome e imagem', async () => {
+      req.params.id = '123';
+      req.body.nome = 'Atualizado';
+      req.file = { filename: 'nova.jpg' };
 
-      const categoriaMock = {
-        nome: 'Categoria Antiga',
-        slug: 'categoria-antiga',
-        imagem: 'imagem-antiga.jpg',
+      const categoria = {
+        nome: 'Antiga',
+        slug: 'antiga',
+        imagem: 'velha.jpg',
         save: jest.fn().mockResolvedValue(),
       };
-
-      Categoria.findByPk.mockResolvedValue(categoriaMock);
+      Categoria.findByPk.mockResolvedValue(categoria);
 
       await updateCategory(req, res);
 
-      expect(categoriaMock.nome).toBe('Categoria Atualizada');
-      expect(categoriaMock.slug).toBe('categoria-atualizada');
-      expect(categoriaMock.imagem).toBe('nova-imagem.jpg');
-      expect(categoriaMock.save).toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalledWith(categoriaMock);
+      expect(categoria.nome).toBe('Atualizado');
+      expect(categoria.slug).toBe('atualizado');
+      expect(categoria.imagem).toBe('nova.jpg');
+      expect(categoria.save).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith(categoria);
     });
 
-    it('deve atualizar somente nome se imagem não for enviada', async () => {
-      req.params = { id: '1' };
-      req.body = { nome: 'Categoria Atualizada' };
-      req.file = null;
+    it('atualiza apenas o nome se imagem não enviada', async () => {
+      req.params.id = '123';
+      req.body.nome = 'Atualizado';
 
-      const categoriaMock = {
-        nome: 'Categoria Antiga',
-        slug: 'categoria-antiga',
-        imagem: 'imagem-antiga.jpg',
+      const categoria = {
+        nome: 'Antiga',
+        slug: 'antiga',
+        imagem: 'velha.jpg',
         save: jest.fn().mockResolvedValue(),
       };
-
-      Categoria.findByPk.mockResolvedValue(categoriaMock);
+      Categoria.findByPk.mockResolvedValue(categoria);
 
       await updateCategory(req, res);
 
-      expect(categoriaMock.nome).toBe('Categoria Atualizada');
-      expect(categoriaMock.slug).toBe('categoria-atualizada');
-      expect(categoriaMock.imagem).toBe('imagem-antiga.jpg');
-      expect(categoriaMock.save).toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalledWith(categoriaMock);
+      expect(categoria.nome).toBe('Atualizado');
+      expect(categoria.slug).toBe('atualizado');
+      expect(categoria.imagem).toBe('velha.jpg');
+      expect(categoria.save).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith(categoria);
     });
 
-    it('deve retornar 500 em caso de erro', async () => {
-      req.params = { id: '1' };
+    it('retorna 500 se erro ocorrer', async () => {
+      req.params.id = '123';
       Categoria.findByPk.mockRejectedValue(new Error('Erro'));
 
       await updateCategory(req, res);
@@ -149,17 +145,18 @@ describe('Category Controller', () => {
     });
   });
 
+  // GET ALL
   describe('getAllCategories', () => {
-    it('deve retornar lista de categorias', async () => {
-      const listaFake = [{ id: 1, nome: 'cat1' }, { id: 2, nome: 'cat2' }];
-      Categoria.findAll.mockResolvedValue(listaFake);
+    it('retorna todas as categorias', async () => {
+      const categorias = [{ id: 1, nome: 'cat1' }, { id: 2, nome: 'cat2' }];
+      Categoria.findAll.mockResolvedValue(categorias);
 
       await getAllCategories(req, res);
 
-      expect(res.json).toHaveBeenCalledWith(listaFake);
+      expect(res.json).toHaveBeenCalledWith(categorias);
     });
 
-    it('deve retornar 500 em caso de erro', async () => {
+    it('retorna 500 em caso de erro', async () => {
       Categoria.findAll.mockRejectedValue(new Error('Erro'));
 
       await getAllCategories(req, res);
@@ -169,9 +166,10 @@ describe('Category Controller', () => {
     });
   });
 
+  // GET BY ID
   describe('getCategoryById', () => {
-    it('deve retornar 404 se categoria não existir', async () => {
-      req.params = { id: '1' };
+    it('retorna 404 se categoria não existir', async () => {
+      req.params.id = '123';
       Categoria.findByPk.mockResolvedValue(null);
 
       await getCategoryById(req, res);
@@ -180,17 +178,17 @@ describe('Category Controller', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Categoria não encontrada' });
     });
 
-    it('deve retornar categoria pelo id', async () => {
-      req.params = { id: '1' };
-      const categoriaFake = { id: '1', nome: 'Teste' };
-      Categoria.findByPk.mockResolvedValue(categoriaFake);
+    it('retorna categoria encontrada', async () => {
+      const categoria = { id: '123', nome: 'Encontrada' };
+      req.params.id = '123';
+      Categoria.findByPk.mockResolvedValue(categoria);
 
       await getCategoryById(req, res);
 
-      expect(res.json).toHaveBeenCalledWith(categoriaFake);
+      expect(res.json).toHaveBeenCalledWith(categoria);
     });
 
-    it('deve retornar 500 em caso de erro', async () => {
+    it('retorna 500 se erro ocorrer', async () => {
       Categoria.findByPk.mockRejectedValue(new Error('Erro'));
 
       await getCategoryById(req, res);
@@ -200,18 +198,15 @@ describe('Category Controller', () => {
     });
   });
 
+  // DELETE
   describe('deleteCategory', () => {
     beforeEach(() => {
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(fs, 'unlinkSync').mockImplementation(() => {});
+      fs.existsSync.mockReturnValue(true);
+      fs.unlinkSync.mockImplementation(() => {});
     });
 
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
-    it('deve retornar 404 se categoria não existir', async () => {
-      req.params = { id: '1' };
+    it('retorna 404 se categoria não for encontrada', async () => {
+      req.params.id = '123';
       Categoria.findByPk.mockResolvedValue(null);
 
       await deleteCategory(req, res);
@@ -220,40 +215,40 @@ describe('Category Controller', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Categoria não encontrada' });
     });
 
-    it('deve deletar categoria e imagem e retornar sucesso', async () => {
-      req.params = { id: '1' };
-      const categoriaMock = {
+    it('deleta categoria e imagem', async () => {
+      req.params.id = '123';
+      const categoria = {
         imagem: 'imagem.jpg',
         destroy: jest.fn().mockResolvedValue(),
       };
-      Categoria.findByPk.mockResolvedValue(categoriaMock);
+      Categoria.findByPk.mockResolvedValue(categoria);
 
       await deleteCategory(req, res);
 
       expect(fs.existsSync).toHaveBeenCalled();
       expect(fs.unlinkSync).toHaveBeenCalledWith(expect.stringContaining('uploads/imagem.jpg'));
-      expect(categoriaMock.destroy).toHaveBeenCalled();
+      expect(categoria.destroy).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({ message: 'Categoria deletada com sucesso' });
     });
 
-    it('deve deletar categoria sem imagem', async () => {
-      req.params = { id: '1' };
-      const categoriaMock = {
+    it('deleta categoria sem imagem', async () => {
+      req.params.id = '123';
+      const categoria = {
         imagem: null,
         destroy: jest.fn().mockResolvedValue(),
       };
-      Categoria.findByPk.mockResolvedValue(categoriaMock);
+      Categoria.findByPk.mockResolvedValue(categoria);
 
       await deleteCategory(req, res);
 
       expect(fs.existsSync).not.toHaveBeenCalled();
       expect(fs.unlinkSync).not.toHaveBeenCalled();
-      expect(categoriaMock.destroy).toHaveBeenCalled();
+      expect(categoria.destroy).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith({ message: 'Categoria deletada com sucesso' });
     });
 
-    it('deve retornar 500 em caso de erro', async () => {
-      req.params = { id: '1' };
+    it('retorna 500 se erro ocorrer', async () => {
+      req.params.id = '123';
       Categoria.findByPk.mockRejectedValue(new Error('Erro'));
 
       await deleteCategory(req, res);

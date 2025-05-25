@@ -1,9 +1,10 @@
 const path = require('path');
 
-// Mock dos models antes de importar o controller
+// Mocks
 const mockCreate = jest.fn();
 const mockFindAll = jest.fn();
 const mockFindByPk = jest.fn();
+const mockFindOne = jest.fn();
 const mockSetCategoria = jest.fn();
 const mockDestroy = jest.fn();
 const mockSave = jest.fn();
@@ -13,26 +14,39 @@ jest.mock('../../../models', () => ({
     create: mockCreate,
     findAll: mockFindAll,
     findByPk: mockFindByPk,
+    findOne: mockFindOne,
   },
   Categoria: {
     findAll: jest.fn(),
   },
 }));
 
-// Como o setCategoria e save são métodos da instância, precisamos mockar a instância:
 function createMockRestauranteInstance() {
   return {
     id: 'fake-id',
     nome: 'Fake Restaurante',
     slug: 'fake-restaurante',
+    telefone: '12345678',
+    endereco: 'Rua A',
+    horario: '10h-22h',
+    sobreNos: 'Fake Sobre',
+    imagem: 'imagem.jpg',
     setCategoria: mockSetCategoria,
     destroy: mockDestroy,
     save: mockSave,
-    toJSON: () => ({ id: 'fake-id', nome: 'Fake Restaurante' }),
+    toJSON: () => ({
+      id: 'fake-id',
+      nome: 'Fake Restaurante',
+      slug: 'fake-restaurante',
+      telefone: '12345678',
+      endereco: 'Rua A',
+      horario: '10h-22h',
+      sobreNos: 'Fake Sobre',
+      imagem: 'imagem.jpg',
+    }),
   };
 }
 
-// Agora importa o controller
 const {
   createRestaurante,
   getAllRestaurantes,
@@ -72,20 +86,18 @@ describe('Restaurante Controller', () => {
       req.file = { filename: 'imagem.jpg' };
 
       const fakeRestaurante = createMockRestauranteInstance();
-
-      // Mock Restaurante.create para retornar a instância mockada
       mockCreate.mockResolvedValue(fakeRestaurante);
 
-      // Mock Categoria.findAll para retornar array de categorias simuladas
-      const mockCategorias = [{ id: 'cat1', nome: 'Categoria 1' }, { id: 'cat2', nome: 'Categoria 2' }];
       const { Categoria } = require('../../../models');
-      Categoria.findAll.mockResolvedValue(mockCategorias);
+      const mockCategorias = [
+        { id: 'cat1', nome: 'Categoria 1' },
+        { id: 'cat2', nome: 'Categoria 2' },
+      ];
 
-      // Mock setCategoria
+      Categoria.findAll.mockResolvedValue(mockCategorias);
       mockSetCategoria.mockResolvedValue();
 
-      // Mock findOne para retornar restaurante com categorias (simulando findOne depois de criação)
-      const { Restaurante } = require('../../../modelsodels');
+      const { Restaurante } = require('../../../models');
       Restaurante.findOne = jest.fn().mockResolvedValue({
         ...fakeRestaurante,
         toJSON: () => ({
@@ -97,13 +109,29 @@ describe('Restaurante Controller', () => {
 
       await createRestaurante(req, res);
 
-      expect(mockCreate).toHaveBeenCalled();
+      expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({
+        nome: 'Meu Restaurante',
+        telefone: '12345678',
+        endereco: 'Rua A',
+        horario: '10h-22h',
+        sobreNos: 'Descrição',
+        imagem: 'imagem.jpg',
+      }));
+
+      expect(Categoria.findAll).toHaveBeenCalledWith({
+        where: { id: req.body.categoriaIds },
+      });
+
       expect(mockSetCategoria).toHaveBeenCalledWith(mockCategorias);
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
         message: 'Restaurante criado com sucesso',
         restaurante: expect.objectContaining({
           nome: 'Meu Restaurante',
+          categorias: expect.arrayContaining([
+            expect.objectContaining({ id: expect.any(String), nome: expect.any(String) }),
+            expect.objectContaining({ id: expect.any(String), nome: expect.any(String) }),
+          ]),
         }),
       }));
     });
@@ -116,6 +144,36 @@ describe('Restaurante Controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ message: 'Nome e imagem são obrigatórios.' });
+    });
+
+    it('deve retornar 400 se categoriaIds não for array', async () => {
+      req.body = {
+        nome: 'Rest',
+        categoriaIds: 'nao-array',
+      };
+      req.file = { filename: 'imagem.jpg' };
+
+      await createRestaurante(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: 'Categorias inválidas.' });
+    });
+
+    it('deve retornar 500 em caso de erro interno', async () => {
+      req.body = {
+        nome: 'Rest',
+        categoriaIds: ['cat1'],
+      };
+      req.file = { filename: 'imagem.jpg' };
+
+      mockCreate.mockRejectedValue(new Error('Erro interno'));
+
+      await createRestaurante(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        message: 'Erro ao criar restaurante',
+      }));
     });
   });
 
@@ -161,6 +219,15 @@ describe('Restaurante Controller', () => {
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Restaurante não encontrado' });
     });
+
+    it('deve retornar 500 em caso de erro', async () => {
+      mockFindByPk.mockRejectedValue(new Error('Erro'));
+
+      await getRestauranteById(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Erro interno' }));
+    });
   });
 
   describe('updateRestaurante', () => {
@@ -172,33 +239,27 @@ describe('Restaurante Controller', () => {
       };
       req.file = { filename: 'novaimagem.jpg' };
 
-      const mockCategorias = [{ id: 'cat1' }, { id: 'cat2' }];
-
-      const fakeRestaurante = createMockRestauranteInstance();
-
-      mockFindByPk.mockResolvedValue(fakeRestaurante);
-
-      // Para atualizar categorias, precisamos mockar Categoria.findAll
       const { Categoria } = require('../../../models');
+      const mockCategorias = [{ id: 'cat1' }, { id: 'cat2' }];
       Categoria.findAll.mockResolvedValue(mockCategorias);
 
-      mockSetCategoria.mockResolvedValue();
-
+      const fakeRestaurante = createMockRestauranteInstance();
+      mockFindByPk.mockResolvedValue(fakeRestaurante);
       mockSave.mockResolvedValue();
-
-      // Mock para buscar o restaurante atualizado
-      const { Restaurante } = require('../../../models');
-      Restaurante.findByPk = jest.fn().mockResolvedValue({
-        ...fakeRestaurante,
-        toJSON: () => ({ id: 'id123', nome: 'Novo Nome' }),
-      });
+      mockSetCategoria.mockResolvedValue();
 
       await updateRestaurante(req, res);
 
       expect(mockFindByPk).toHaveBeenCalledWith('id123');
+      expect(fakeRestaurante.nome).toBe('Novo Nome');
+      expect(fakeRestaurante.imagem).toBe('novaimagem.jpg');
       expect(mockSave).toHaveBeenCalled();
+      expect(Categoria.findAll).toHaveBeenCalledWith({ where: { id: req.body.categoriaIds } });
       expect(mockSetCategoria).toHaveBeenCalledWith(mockCategorias);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ id: 'id123', nome: 'Novo Nome' }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        id: 'fake-id',
+        nome: 'Novo Nome',
+      }));
     });
 
     it('deve retornar 404 se restaurante não encontrado para atualização', async () => {
@@ -209,6 +270,16 @@ describe('Restaurante Controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Restaurante não encontrado' });
+    });
+
+    it('deve retornar 500 em caso de erro interno', async () => {
+      req.params.id = 'id123';
+      mockFindByPk.mockRejectedValue(new Error('Erro interno'));
+
+      await updateRestaurante(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Erro ao atualizar restaurante' }));
     });
   });
 
@@ -234,6 +305,17 @@ describe('Restaurante Controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Restaurante não encontrado' });
+    });
+
+    it('deve retornar 500 em caso de erro interno', async () => {
+      req.params.id = 'id123';
+      mockFindByPk.mockResolvedValue(createMockRestauranteInstance());
+      mockDestroy.mockRejectedValue(new Error('Erro interno'));
+
+      await deleteRestaurante(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Erro ao deletar restaurante' }));
     });
   });
 });

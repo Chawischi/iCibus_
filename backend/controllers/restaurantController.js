@@ -67,15 +67,18 @@ const getAllRestaurantes = async (req, res) => {
       },
     });
 
-    console.log('Restaurantes buscados:', restaurantes.map(r => r.toJSON()));
+    const restaurantesJSON = restaurantes.map(r =>
+      typeof r.toJSON === 'function' ? r.toJSON() : r
+    );
 
-    res.json({ success: true, restaurantes });
+    console.log('Restaurantes buscados:', restaurantesJSON);
+
+    res.json({ success: true, restaurantes: restaurantesJSON });
   } catch (err) {
     console.error('Erro ao buscar restaurantes:', err);
     res.status(500).json({ success: false, message: 'Erro ao buscar restaurantes', detalhes: err.message });
   }
 };
-
 
 
 // Buscar restaurante por ID
@@ -99,7 +102,7 @@ const getRestauranteById = async (req, res) => {
       success: true,
       restaurante
     });
-    
+
   } catch (err) {
     console.error('Erro ao buscar restaurante:', err);
     res.status(500).json({ error: 'Erro ao buscar restaurante', detalhes: err.message });
@@ -139,7 +142,12 @@ const updateRestaurante = async (req, res) => {
 
     // Atualizar categorias associadas
     if (categoriaIds.length > 0) {
-      await restaurante.setCategorias(categorias);
+      const categorias = await Categoria.findAll({
+        where: {
+          id: categoriaIds
+        }
+      });
+      await restaurante.setCategorias(categorias); // ou setCategoria conforme seu modelo
       console.log('Categorias atualizadas:', categoriaIds);
     }
 
