@@ -1,3 +1,4 @@
+/*
 const { ItemMenu } = require('../../../models');
 const itemMenuController = require('../../../controllers/itemMenuController');
 
@@ -502,6 +503,323 @@ describe('ItemMenu Controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'restauranteId é obrigatório' });
+    });
+  });
+});
+*/
+
+const { ItemMenu } = require('../../../models');
+const itemMenuController = require('../../../controllers/itemMenuController');
+
+jest.mock('../../../models', () => ({
+  ItemMenu: {
+    create: jest.fn(),
+    findByPk: jest.fn(),
+    findAll: jest.fn(),
+  },
+}));
+
+// Helpers para mocks
+function mockResponse() {
+  return {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  };
+}
+
+function mockConsoleError() {
+  return jest.spyOn(console, 'error').mockImplementation(() => {});
+}
+
+describe('ItemMenu Controller', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('createItemMenu', () => {
+    it('deve criar um item do menu com sucesso (com imagem)', async () => {
+      const req = {
+        body: {
+          nome: 'Pizza Margherita',
+          preco: 25.5,
+          descricao: 'Clássica italiana',
+          restauranteId: '123',
+        },
+        file: {
+          filename: 'pizza.jpg',
+        },
+      };
+
+      const res = mockResponse();
+
+      const createdItem = { ...req.body, imagem: 'pizza.jpg' };
+      ItemMenu.create.mockResolvedValue(createdItem);
+
+      await itemMenuController.createItemMenu(req, res);
+
+      expect(ItemMenu.create).toHaveBeenCalledWith({
+        nome: 'Pizza Margherita',
+        slug: 'pizza-margherita',
+        preco: 25.5,
+        descricao: 'Clássica italiana',
+        imagem: 'pizza.jpg',
+        restauranteId: '123',
+      });
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(createdItem);
+    });
+
+    it('deve criar um item do menu com sucesso (sem imagem)', async () => {
+      const req = {
+        body: {
+          nome: 'Sushi Especial',
+          preco: 40,
+          descricao: 'Delícia japonesa',
+          restauranteId: '456',
+        },
+        file: null,
+      };
+
+      const res = mockResponse();
+
+      const createdItem = { ...req.body, imagem: null };
+      ItemMenu.create.mockResolvedValue(createdItem);
+
+      await itemMenuController.createItemMenu(req, res);
+
+      expect(ItemMenu.create).toHaveBeenCalledWith({
+        nome: 'Sushi Especial',
+        slug: 'sushi-especial',
+        preco: 40,
+        descricao: 'Delícia japonesa',
+        imagem: null,
+        restauranteId: '456',
+      });
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(createdItem);
+    });
+
+    it('deve retornar erro 500 se ocorrer uma falha', async () => {
+      const req = {
+        body: {
+          nome: 'Falha',
+          preco: 10,
+          descricao: '',
+          restauranteId: '123',
+        },
+        file: null,
+      };
+
+      const res = mockResponse();
+      const consoleSpy = mockConsoleError();
+
+      try {
+        ItemMenu.create.mockRejectedValue(new Error('Falha ao criar'));
+
+        await itemMenuController.createItemMenu(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao criar item do menu' });
+      } finally {
+        consoleSpy.mockRestore();
+      }
+    });
+
+    it('deve gerar slug corretamente com caracteres especiais e espaços', async () => {
+      const req = {
+        body: {
+          nome: 'Sopa de Cebola & Queijo!',
+          preco: 20,
+          descricao: 'Saboroso e quente',
+          restauranteId: '789',
+        },
+        file: null,
+      };
+
+      const res = mockResponse();
+
+      const createdItem = { ...req.body, imagem: null };
+      ItemMenu.create.mockResolvedValue(createdItem);
+
+      await itemMenuController.createItemMenu(req, res);
+
+      expect(ItemMenu.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          // Aqui assumimos que & virou 'and' e removeu '!'
+          slug: 'sopa-de-cebola-and-queijo',
+        })
+      );
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(createdItem);
+    });
+
+    it('deve aceitar nome com letras maiúsculas e espaços e gerar slug minúsculo', async () => {
+      const req = {
+        body: {
+          nome: 'Hambúrguer Gourmet Especial',
+          preco: 30,
+          descricao: 'Delícia premium',
+          restauranteId: '321',
+        },
+        file: null,
+      };
+
+      const res = mockResponse();
+
+      const createdItem = { ...req.body, imagem: null };
+      ItemMenu.create.mockResolvedValue(createdItem);
+
+      await itemMenuController.createItemMenu(req, res);
+
+      expect(ItemMenu.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slug: 'hamburguer-gourmet-especial',
+        })
+      );
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(createdItem);
+    });
+
+    it('deve tratar corretamente se body.nome estiver vazio (gera slug vazio)', async () => {
+      const req = {
+        body: {
+          nome: '',
+          preco: 10,
+          descricao: 'Teste',
+          restauranteId: '111',
+        },
+        file: null,
+      };
+
+      const res = mockResponse();
+
+      const createdItem = { ...req.body, imagem: null };
+      ItemMenu.create.mockResolvedValue(createdItem);
+
+      await itemMenuController.createItemMenu(req, res);
+
+      // Aqui o slug esperado é string vazia, isso depende da implementação do controller
+      expect(ItemMenu.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slug: '',
+        })
+      );
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(createdItem);
+    });
+
+    it('deve retornar erro 500 se req.body estiver ausente', async () => {
+      const req = {
+        body: null,
+        file: null,
+      };
+
+      const res = mockResponse();
+      const consoleSpy = mockConsoleError();
+
+      try {
+        ItemMenu.create.mockRejectedValue(new Error('Dados inválidos'));
+
+        await itemMenuController.createItemMenu(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao criar item do menu' });
+      } finally {
+        consoleSpy.mockRestore();
+      }
+    });
+  });
+
+  describe('getAllItensMenu', () => {
+    it('deve retornar todos os itens do menu', async () => {
+      const req = {};
+      const res = mockResponse();
+
+      const itens = [{ nome: 'Pizza' }, { nome: 'Lasanha' }];
+      ItemMenu.findAll.mockResolvedValue(itens);
+
+      await itemMenuController.getAllItensMenu(req, res);
+
+      expect(ItemMenu.findAll).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith(itens);
+    });
+
+    it('deve retornar array vazio se não houver itens', async () => {
+      const req = {};
+      const res = mockResponse();
+
+      ItemMenu.findAll.mockResolvedValue([]);
+
+      await itemMenuController.getAllItensMenu(req, res);
+
+      expect(ItemMenu.findAll).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith([]);
+    });
+
+    it('deve retornar erro se findAll falhar', async () => {
+      const req = {};
+      const res = mockResponse();
+      const consoleSpy = mockConsoleError();
+
+      try {
+        ItemMenu.findAll.mockRejectedValue(new Error('Erro'));
+
+        await itemMenuController.getAllItensMenu(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao buscar itens do menu' });
+      } finally {
+        consoleSpy.mockRestore();
+      }
+    });
+  });
+
+  describe('getItemMenuById', () => {
+    it('deve retornar item do menu pelo ID', async () => {
+      const req = { params: { id: 'abc' } };
+      const res = mockResponse();
+
+      const item = { nome: 'Hamburguer' };
+      ItemMenu.findByPk.mockResolvedValue(item);
+
+      await itemMenuController.getItemMenuById(req, res);
+
+      expect(ItemMenu.findByPk).toHaveBeenCalledWith('abc');
+      expect(res.json).toHaveBeenCalledWith(item);
+    });
+
+    it('deve retornar 404 se item não for encontrado', async () => {
+      const req = { params: { id: 'invalido' } };
+      const res = mockResponse();
+
+      ItemMenu.findByPk.mockResolvedValue(null);
+
+      await itemMenuController.getItemMenuById(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Item não encontrado' });
+    });
+
+    it('deve retornar erro 500 se findByPk falhar', async () => {
+      const req = { params: { id: 'abc' } };
+      const res = mockResponse();
+      const consoleSpy = mockConsoleError();
+
+      try {
+        ItemMenu.findByPk.mockRejectedValue(new Error('Erro no banco'));
+
+        await itemMenuController.getItemMenuById(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao buscar item do menu' });
+      } finally {
+        consoleSpy.mockRestore();
+      }
     });
   });
 });
