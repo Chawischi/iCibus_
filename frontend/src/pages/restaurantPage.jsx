@@ -4,29 +4,44 @@ import { getRestaurantById } from '../services/restaurantServices';
 import DetailsRestaurant from '../components/DetailsRestaurant';
 import HomeListItemMenu from '../components/DetailsListItemMenu';
 import { getItensMenuByRestauranteId } from '../services/ItemMenuServices';
+import ModalProduto from '../components/ModalProduto';
 
 const RestaurantPage = () => {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
   const [error, setError] = useState(null);
+  const [itemSelecionado, setItemSelecionado] = useState(null);
 
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
         const token = localStorage.getItem('token');
         const response = await getRestaurantById(id, token);
-        console.log('restaurant response:', response);
-
         const data = response.restaurante || response.restaurant || response.data || response;
         setRestaurant(data);
       } catch (err) {
-        console.error('Erro ao buscar dados do restaurante:', err);
         setError('Erro ao buscar dados do restaurante');
       }
     };
-
     fetchRestaurant();
   }, [id]);
+
+  // Função para adicionar item ao carrinho
+  const handleAddToCart = async (itemMenuId, quantity) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch('http://localhost:3000/cart/items', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ itemMenuId, quantity }),
+    });
+
+    if (!res.ok) {
+      throw new Error('Falha ao adicionar item ao carrinho');
+    }
+  };
 
   if (error) return <p className="text-red-500">{error}</p>;
   if (!restaurant || !restaurant.nome) return <p>Carregando restaurante...</p>;
@@ -41,9 +56,17 @@ const RestaurantPage = () => {
         <HomeListItemMenu
           restauranteId={restaurant.id}
           fetchItemsFunc={getItensMenuByRestauranteId}
-          onSelectItem={(item) => console.log('Item selecionado:', item)}
+          onSelectItem={(item) => setItemSelecionado(item)}
         />
       </div>
+
+      {itemSelecionado && (
+        <ModalProduto
+          item={itemSelecionado}
+          onClose={() => setItemSelecionado(null)}
+          onAddToCart={handleAddToCart}  // <-- Passa a função para o modal aqui
+        />
+      )}
     </div>
   );
 };

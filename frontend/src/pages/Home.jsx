@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import HomeListCategory from '../components/HomeListCategory';
 import HomeListRestaurant from '../components/HomeListRestaurant';
 import { getCategories } from '../services/categoryServices';
-import { getRestaurantsByCategory } from '../services/restaurantServices';
+import { getRestaurantsByCategory, getRestaurants } from '../services/restaurantServices';
 
 const Home = () => {
   const [categorias, setCategorias] = useState([]);
@@ -10,35 +10,47 @@ const Home = () => {
   const [restaurantes, setRestaurantes] = useState([]);
   const [loadingRestaurants, setLoadingRestaurants] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchInitialData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const result = await getCategories(); // ✅ Sem token agora
-        if (result.success) {
-          setCategorias(result.categories);
-          setError(null);
+        const categoriesResult = await getCategories();
+        if (categoriesResult.success) {
+          // Adiciona categoria "Todas" no início
+          setCategorias([{ id: 0, nome: 'Todas' }, ...categoriesResult.categories]);
         } else {
-          console.error(result.message);
-          setError(result.message || 'Erro ao buscar categorias.');
+          setError(categoriesResult.message || 'Erro ao buscar categorias.');
         }
+
+        const allRestaurants = await getRestaurants();
+        setRestaurantes(allRestaurants);
+        setSelectedCategoryId(0); // marca "Todas" selecionada
+
       } catch (err) {
-        console.error('Erro ao buscar categorias:', err);
-        setError('Erro ao buscar categorias.');
+        setError('Erro ao carregar dados.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCategories();
+    fetchInitialData();
   }, []);
 
   const handleSelectCategory = async (category) => {
     setLoadingRestaurants(true);
     setError(null);
+    setSelectedCategoryId(category.id);
     try {
-      const restaurantesData = await getRestaurantsByCategory(category.id); // ✅ Já está sem token
-      setRestaurantes(restaurantesData);
+      if (category.id === 0) {
+        const allRestaurants = await getRestaurants();
+        setRestaurantes(allRestaurants);
+      } else {
+        const restaurantesData = await getRestaurantsByCategory(category.id);
+        setRestaurantes(restaurantesData);
+      }
     } catch (err) {
       setError(err.message || 'Erro ao buscar restaurantes.');
       setRestaurantes([]);
@@ -57,6 +69,7 @@ const Home = () => {
           <HomeListCategory
             categories={categorias}
             onSelectCategory={handleSelectCategory}
+            selectedCategoryId={selectedCategoryId}
           />
 
           {loadingRestaurants ? (
@@ -70,7 +83,7 @@ const Home = () => {
               />
             </div>
           ) : (
-            <h2 className="text-xl font-bold mb-4 text-center">Restaurantes</h2>
+            <h2 className="text-xl font-bold mb-4 text-center">Nenhum restaurante encontrado.</h2>
           )}
         </>
       ) : (

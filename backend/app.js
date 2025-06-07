@@ -17,7 +17,9 @@ const authRoutes = require('./routes/authRoutes.js');
 const categoryRoutes = require('./routes/categoryRoutes');
 const restauranteRoutes = require('./routes/restaurantRoutes.js');
 const itemMenuRoutes = require('./routes/itemMenuRoutes');
+const cartRoutes = require('./routes/cartRoutes');
 
+app.use('/cart', cartRoutes);
 app.use('/auth', authRoutes);
 app.use('/categorias', categoryRoutes);
 app.use('/restaurantes', restauranteRoutes);
