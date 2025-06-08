@@ -1,24 +1,28 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import TimerPedido from '../components/TimerPedido';
+import {
+    checkoutCart,
+    fetchCartData,
+    updateCartItemQuantity,
+    removeCartItem,
+} from '../services/cartServices';
 
 const CartPage = () => {
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showTimer, setShowTimer] = useState(false);
 
-    const DELIVERY_FEE = 10.0; // exemplo de taxa fixa de entrega
+    const navigate = useNavigate();
+    const DELIVERY_FEE = 10.0;
 
     const fetchCart = async () => {
         setLoading(true);
         setError(null);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3000/cart', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (!res.ok) throw new Error('Erro ao buscar carrinho');
-            const data = await res.json();
+            const data = await fetchCartData(token);
             setCart(data);
         } catch (err) {
             setError(err.message);
@@ -33,50 +37,55 @@ const CartPage = () => {
 
     const updateQuantity = async (itemId, quantity) => {
         if (quantity < 1) return;
-        const token = localStorage.getItem('token');
-        await fetch(`http://localhost:3000/cart/items/${itemId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ quantity }),
-        });
-        fetchCart();
+        try {
+            const token = localStorage.getItem('token');
+            await updateCartItemQuantity(itemId, quantity, token);
+            fetchCart();
+        } catch (err) {
+            alert(err.message);
+        }
     };
 
     const removeItem = async (itemId) => {
-        const token = localStorage.getItem('token');
-        await fetch(`http://localhost:3000/cart/items/${itemId}`, {
-            method: 'DELETE',
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        fetchCart();
+        try {
+            const token = localStorage.getItem('token');
+            await removeCartItem(itemId, token);
+            fetchCart();
+        } catch (err) {
+            alert(err.message);
+        }
     };
 
     const checkout = async () => {
-        const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:3000/cart/checkout', {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        if (res.ok) {
-            alert('Compra finalizada!');
-            fetchCart();
-        } else {
-            alert('Erro ao finalizar compra');
+        try {
+            const token = localStorage.getItem('token');
+            await checkoutCart(token);
+            setShowTimer(true);
+            setCart(null);
+        } catch (err) {
+            alert(err.message);
         }
     };
+
+    const handleTimerFinish = () => {
+        navigate('/');
+    };
+
+    if (showTimer) {
+        return (
+            <div className="min-h-screen flex justify-center bg-white pt-[100px]">
+                <TimerPedido duracaoTotal={11} onFinish={handleTimerFinish} />
+            </div>
+        );
+    }
 
     if (loading) return <p>Carregando carrinho...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
 
-    // Cálculos do resumo:
-    const totalItems = cart?.items?.reduce((acc, item) => acc + item.product.preco * item.quantity, 0) || 0;
+    const totalItems = cart?.items?.reduce(
+        (acc, item) => acc + item.product.preco * item.quantity,
+        0
+    ) || 0;
     const totalOrder = totalItems + DELIVERY_FEE;
 
     return (
@@ -101,11 +110,10 @@ const CartPage = () => {
                     </div>
                 )}
 
-
                 {cart?.items?.length > 0 && cart.items.map((item) => (
                     <div
                         key={item.id}
-                        className="flex items-center gap-6 p-5 mb-6 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                        className="flex items-center gap-6 p-5 mb-6 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow min-h-[120px]"
                     >
                         <img
                             src={
@@ -116,24 +124,28 @@ const CartPage = () => {
                             alt={item.product?.nome || ''}
                             className="w-28 h-24 object-cover rounded-md flex-shrink-0"
                         />
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                <h2 className="font-semibold text-lg">{item.product?.nome}</h2>
-                                {item.product?.restauranteNome && (
-                                    <span className="text-xs bg-yellow-300 text-yellow-900 font-semibold px-2 py-0.5 rounded-full select-none">
-                                        {item.product.restauranteNome}
-                                    </span>
-                                )}
+                        <div className="flex-1 flex flex-col justify-between h-full">
+                            <div>
+                                <div className="flex items-center gap-3 mb-2">
+                                    <h2 className="font-semibold text-lg">{item.product?.nome}</h2>
+                                    {item.product?.restauranteNome && (
+                                        <span className="text-xs bg-yellow-300 text-yellow-900 font-semibold px-2 py-0.5 rounded-full select-none">
+                                            {item.product.restauranteNome}
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-gray-700 mb-2">Preço: R$ {Number(item.product?.preco || 0).toFixed(2)}</p>
                             </div>
-                            <p className="text-gray-700 mb-2">Preço: R$ {Number(item.product?.preco || 0).toFixed(2)}</p>
-                            <label className="font-semibold block mb-1">Quantidade:</label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={item.quantity}
-                                onChange={(e) => updateQuantity(item.id, parseInt(e.target.value, 10))}
-                                className="border rounded w-20 text-center py-1"
-                            />
+                            <div>
+                                <label className="font-semibold block mb-1">Quantidade:</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={item.quantity}
+                                    onChange={(e) => updateQuantity(item.id, parseInt(e.target.value, 10))}
+                                    className="border rounded w-20 text-center py-1 h-9"
+                                />
+                            </div>
                         </div>
                         <button
                             onClick={() => removeItem(item.id)}
@@ -146,7 +158,6 @@ const CartPage = () => {
                 ))}
             </div>
 
-            {/* Painel lateral do resumo do pedido */}
             <aside className="w-full md:w-80 p-6 bg-white rounded-lg shadow-md border border-gray-200 flex flex-col gap-6">
                 <h2 className="text-2xl font-bold mb-4">Resumo do pedido</h2>
                 <div className="flex justify-between text-gray-700">
