@@ -1,5 +1,3 @@
-// restaurantServices.js
-
 export const createRestaurante = async (formData, token) => {
   if (!token) {
     console.error('Token de autenticação ausente.');
@@ -37,6 +35,30 @@ export const createRestaurante = async (formData, token) => {
   }
 };
 
+
+export const getRestaurants = async () => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurantes`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Erro ao buscar restaurantes:", errorData);
+      return { success: false, message: errorData.message || 'Falha ao buscar restaurantes' };
+    }
+
+    const data = await response.json();
+    console.log("Dados de restaurantes recebidos:", data);
+    return { success: true, restaurantes: data.restaurantes };
+  } catch (err) {
+    console.error("Erro ao buscar restaurantes:", err);
+    return { success: false, message: err.message || 'Erro ao buscar restaurantes' };
+  }
+};
+
+
+/*
 export const getRestaurants = async () => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurantes`, {
@@ -57,7 +79,7 @@ export const getRestaurants = async () => {
     throw new Error(err.message || 'Erro ao buscar restaurantes');
   }
 };
-
+*/
 
 export const saveRestaurante = async (id, formData, token) => {
   try {
