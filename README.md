@@ -65,8 +65,7 @@ A separação entre as camadas facilita a manutenção, a escalabilidade e a int
 
 ### **Para Administradores de Restaurantes**  
 - **RF05:** O sistema deve permitir que os administradores cadastrem, editem e removam itens do menu.
-- **RF06:** Os administradores devem poder visualizar os pedidos recebidos.
-- **RF07:** O sistema deve permitir que os administradores atualizem o status do pedido (exemplo: "Em preparo", "Saiu para entrega", "Entregue").
+- **RF06:** O sistema deve atualizar automaticamente o status dos pedidos com base no andamento do processo de entrega.
 
 ### **Requisitos Não Funcionais (RNF)**  
 Os requisitos não funcionais definem características de qualidade e restrições do sistema.
