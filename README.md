@@ -20,7 +20,7 @@ O Icibus foi desenvolvido utilizando as seguintes tecnologias:
 [![Tailwind](https://img.shields.io/badge/TailwindCSS-06B6D4.svg?style=for-the-badge&logo=TailwindCSS&logoColor=white)](https://tailwindcss.com/)  
 [![React](https://img.shields.io/badge/React-61DAFB.svg?style=for-the-badge&logo=React&logoColor=black)](https://reactjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791.svg?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-
+[![Node.js](https://img.shields.io/badge/Node.js-339933.svg?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 
 Optamos pelo React para construir interfaces dinâmicas e responsivas, garantindo uma experiência fluida para o usuário. Utilizamos Vite para o empacotamento de código e o servidor de desenvolvimento, proporcionando um fluxo de trabalho mais rápido e eficiente. Para o banco de dados, escolhemos o PostgreSQL pela sua robustez e escalabilidade. A autenticação será tratada de maneira personalizada, sem o uso do Clerk, e o Tailwind CSS facilitará a estilização, tornando o desenvolvimento mais ágil e organizado, sem a necessidade de escrever CSS manualmente.
 
