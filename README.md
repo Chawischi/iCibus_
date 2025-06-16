@@ -9,12 +9,11 @@ O sistema iCibus foi desenvolvido para resolver a dificuldade que muitos restaur
 ### **Para clientes**  
 ✅ Visualização de menus e produtos  
 ✅ Adição de itens ao carrinho  
-✅ Simulação de pagamento com informações cadastradas  
+✅ Simulação de pagamento  
 ✅ Acompanhamento do status do pedido  
 
 ### **Para administradores**  
 ✅ Cadastro e gerenciamento de produtos  
-✅ Controle de pedidos recebidos  
 ✅ Atualização do status das entregas  
 
 ## **🛠️ Tecnologias Utilizadas**  
