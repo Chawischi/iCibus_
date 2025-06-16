@@ -2,6 +2,9 @@
 
 Icibus é uma **plataforma web de pedidos de comida** que conecta clientes a restaurantes, permitindo que os usuários visualizem menus, façam pedidos, realizem pagamentos simulados e acompanhem o status das entregas. O sistema possui funcionalidades tanto para consumidores quanto para administradores de restaurantes.  
 
+# 🧩 Domínio do Problema
+O sistema iCibus foi desenvolvido para resolver a dificuldade que muitos restaurantes enfrentam na gestão de pedidos online com entrega. Em geral, esses estabelecimentos lidam com plataformas separadas para exibir produtos, registrar pedidos e controlar o fluxo de entrega, o que gera falhas de comunicação e ineficiência. O iCibus centraliza esse processo em uma aplicação web, permitindo que os usuários façam pedidos de forma prática, enquanto os administradores gerenciam restaurantes, itens e categorias de forma unificada.
+
 ## **📌 Funcionalidades**  
 ### **Para clientes**  
 ✅ Visualização de menus e produtos  
@@ -24,8 +27,16 @@ O Icibus foi desenvolvido utilizando as seguintes tecnologias:
 
 Optamos pelo React para construir interfaces dinâmicas e responsivas, garantindo uma experiência fluida para o usuário. Utilizamos Vite para o empacotamento de código e o servidor de desenvolvimento, proporcionando um fluxo de trabalho mais rápido e eficiente. Para o banco de dados, escolhemos o PostgreSQL pela sua robustez e escalabilidade. A autenticação será tratada de maneira personalizada, sem o uso do Clerk, e o Tailwind CSS facilitará a estilização, tornando o desenvolvimento mais ágil e organizado, sem a necessidade de escrever CSS manualmente.
 
-## **📐 Arquitetura do Sistema**  
-O Icibus será desenvolvido utilizando uma **arquitetura monolítica** na primeira versão para facilitar o desenvolvimento e implantação inicial. Futuramente, à medida que a plataforma crescer, poderá ser migrada para uma **arquitetura baseada em microsserviços**, permitindo maior escalabilidade e modularização das funcionalidades.  
+# 🏗️ Arquitetura do Sistema
+O sistema adota uma arquitetura em camadas baseada no padrão MVC (Model-View-Controller):
+
+Backend desenvolvido com Node.js e Express.js, estruturado em modelos, controladores, rotas e middlewares.
+
+Frontend criado com React.js e Vite, como uma Single Page Application (SPA), com componentes reutilizáveis e estilização via Tailwind CSS.
+
+A separação entre as camadas facilita a manutenção, a escalabilidade e a integração futura com serviços externos.
+
+
 
 ## **📈 Estratégia de Desenvolvimento**  
 - **Fase 1: Protótipo e Validação**  
