@@ -23,25 +23,6 @@ const createCategory = async (nome, imagem, token) => {
     return { success: false, message: "Erro ao criar categoria." };
   }
 };
-/*
-const getCategories = async () => {
-  try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/categorias`, {
-      method: 'GET',
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      return { success: true, categories: data };
-    } else {
-      return { success: false, message: 'Erro ao buscar categorias.' };
-    }
-  } catch (err) {
-    console.error(err);
-    return { success: false, message: 'Erro ao buscar categorias.' };
-  }
-};
-*/
 
 const getCategories = async () => {
   try {

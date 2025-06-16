@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import HomeListCategory from '../components/HomeListCategory';
 import HomeListRestaurant from '../components/HomeListRestaurant';
 import { getCategories } from '../services/categoryServices';
-import { getRestaurantsByCategory } from '../services/restaurantServices';
+import { getRestaurantsByCategory, getRestaurants } from '../services/restaurantServices';
 
 const Home = () => {
   const [categorias, setCategorias] = useState([]);
@@ -10,40 +10,70 @@ const Home = () => {
   const [restaurantes, setRestaurantes] = useState([]);
   const [loadingRestaurants, setLoadingRestaurants] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
+  // Carrega categorias
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchInitialData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const result = await getCategories(); // ✅ Sem token agora
-        if (result.success) {
-          setCategorias(result.categories);
-          setError(null);
+        const categoriesResult = await getCategories();
+        if (categoriesResult.success) {
+          setCategorias(categoriesResult.categories);
         } else {
-          console.error(result.message);
-          setError(result.message || 'Erro ao buscar categorias.');
+          setError(categoriesResult.message || 'Erro ao buscar categorias.');
         }
       } catch (err) {
-        console.error('Erro ao buscar categorias:', err);
-        setError('Erro ao buscar categorias.');
+        console.error('Erro ao carregar categorias:', err);
+        setError('Erro ao carregar categorias.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCategories();
+    fetchInitialData();
   }, []);
 
+  // Carrega todos os restaurantes ao abrir a página
+  useEffect(() => {
+    const fetchAllRestaurants = async () => {
+      setLoadingRestaurants(true);
+      setError(null);
+      try {
+        const allRestaurantsResult = await getRestaurants();
+        if (allRestaurantsResult.success) {
+          setRestaurantes(allRestaurantsResult.restaurantes);
+          setSelectedCategoryId(null);
+        } else {
+          setError(allRestaurantsResult.message || 'Erro ao carregar restaurantes.');
+          setRestaurantes([]);
+        }
+      } catch (err) {
+        setError(err.message || 'Erro ao carregar restaurantes.');
+        setRestaurantes([]);
+      } finally {
+        setLoadingRestaurants(false);
+      }
+    };
+
+    fetchAllRestaurants();
+  }, []);
+
+  
   const handleSelectCategory = async (category) => {
     setLoadingRestaurants(true);
     setError(null);
+    setSelectedCategoryId(category.id);
     try {
-      const restaurantesData = await getRestaurantsByCategory(category.id); // ✅ Já está sem token
+      const restaurantesData = await getRestaurantsByCategory(category.id);
       setRestaurantes(restaurantesData);
     } catch (err) {
       setError(err.message || 'Erro ao buscar restaurantes.');
       setRestaurantes([]);
+    } finally {
+      setLoadingRestaurants(false);
     }
-    setLoadingRestaurants(false);
   };
 
   return (
@@ -54,23 +84,28 @@ const Home = () => {
         <p className="text-red-500">{error}</p>
       ) : categorias.length > 0 ? (
         <>
-          <HomeListCategory
-            categories={categorias}
-            onSelectCategory={handleSelectCategory}
-          />
+          <div className="flex justify-center">
+            <HomeListCategory
+              categories={categorias}
+              onSelectCategory={handleSelectCategory}
+              selectedCategoryId={selectedCategoryId}
+            />
+          </div>
 
           {loadingRestaurants ? (
-            <p>Carregando restaurantes...</p>
-          ) : restaurantes.length > 0 ? (
+            <p className="mt-6 text-center">Carregando restaurantes...</p>
+          ) : (
             <div className="mt-6">
               <h2 className="text-xl font-bold mb-4 text-center">Restaurantes</h2>
-              <HomeListRestaurant
-                restaurants={restaurantes}
-                onSelectRestaurant={(restaurante) => console.log('Selecionado:', restaurante)}
-              />
+              {restaurantes.length > 0 ? (
+                <HomeListRestaurant
+                  restaurants={restaurantes}
+                  onSelectRestaurant={(restaurante) => console.log('Selecionado:', restaurante)}
+                />
+              ) : (
+                <p className="text-center">Nenhum restaurante encontrado.</p>
+              )}
             </div>
-          ) : (
-            <h2 className="text-xl font-bold mb-4 text-center">Restaurantes</h2>
           )}
         </>
       ) : (
