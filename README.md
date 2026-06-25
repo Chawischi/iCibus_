@@ -1,3 +1,9 @@
+## Esta trabalho foi feito alteração para a atividade de Inteligêngia Artificial, segue o nome dos integrantes da equipe que fizeram a alteração:
+- Eric Caetano
+- Felipe da Silva Chawischi
+- Gabriel Felipe Alves Bandoch
+- João Guilherme Tamanini Dalmarco
+
 # **Icibus - Plataforma de Pedidos Online**  
 
 Icibus é uma **plataforma web de pedidos de comida** que conecta clientes a restaurantes, permitindo que os usuários visualizem menus, façam pedidos, realizem pagamentos simulados e acompanhem o status das entregas. O sistema possui funcionalidades tanto para consumidores quanto para administradores de restaurantes.  
